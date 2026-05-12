@@ -1,0 +1,235 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Side {
+  NIKAIDO
+  OMOY
+  AROMARIA_TEAM
+  AUDITOR
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+  VIEWER
+  INVESTOR
+}
+
+enum Phase {
+  WIRE_CONDITION
+  COMMITTED
+  POST_SIGNING
+  COMPLETED_PRE_60D
+}
+
+enum Category {
+  GOVERNANCE
+  REPORTING
+  LEGAL
+  BUSINESS
+  STRUCTURE
+  HR
+  FINANCIAL
+  RISK
+  FUNDING
+}
+
+enum Status {
+  NOT_STARTED
+  IN_PROGRESS
+  BLOCKED
+  COMPLETED
+}
+
+enum Priority {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum ReportType {
+  FINANCIAL
+  GROWTH
+  CREATIVE
+  SPECIAL_PROJECT
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  name          String
+  title         String?
+  side          Side
+  role          Role
+  canApprove    Boolean        @default(false)
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime       @default(now())
+  accounts      Account[]
+  sessions      Session[]
+  approvals     Approval[]
+  comments      Comment[]
+  statusChanges StatusChange[]
+  uploads       FileUpload[]
+  auditEvents   AuditLog[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Deliverable {
+  id                     String         @id @default(cuid())
+  code                   String         @unique
+  name                   String
+  description            String         @db.Text
+  phase                  Phase
+  category               Category
+  sectionRef             String
+  priority               Priority
+  implementationTimeline String?
+  status                 Status         @default(NOT_STARTED)
+  progressPercent        Int            @default(0)
+  targetDate             DateTime?
+  ownerId                String?
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+  approvals              Approval[]
+  comments               Comment[]
+  files                  FileUpload[]
+  statusChanges          StatusChange[]
+  auditEvents            AuditLog[]
+}
+
+model Approval {
+  id            String      @id @default(cuid())
+  deliverableId String
+  userId        String
+  side          Side
+  approvedAt    DateTime    @default(now())
+  deliverable   Deliverable @relation(fields: [deliverableId], references: [id], onDelete: Cascade)
+  user          User        @relation(fields: [userId], references: [id])
+
+  @@unique([deliverableId, side])
+}
+
+model Comment {
+  id            String      @id @default(cuid())
+  deliverableId String
+  userId        String
+  body          String      @db.Text
+  parentId      String?
+  createdAt     DateTime    @default(now())
+  deliverable   Deliverable @relation(fields: [deliverableId], references: [id], onDelete: Cascade)
+  user          User        @relation(fields: [userId], references: [id])
+  parent        Comment?    @relation("Replies", fields: [parentId], references: [id])
+  replies       Comment[]   @relation("Replies")
+}
+
+model FileUpload {
+  id            String        @id @default(cuid())
+  deliverableId String?
+  reportId      String?
+  meetingId     String?
+  userId        String
+  filename      String
+  url           String
+  mimeType      String
+  sizeBytes     Int
+  version       Int           @default(1)
+  isCurrent     Boolean       @default(true)
+  uploadedAt    DateTime      @default(now())
+  deliverable   Deliverable?  @relation(fields: [deliverableId], references: [id])
+  report        Report?       @relation(fields: [reportId], references: [id])
+  meeting       BoardMeeting? @relation(fields: [meetingId], references: [id])
+  user          User          @relation(fields: [userId], references: [id])
+}
+
+model StatusChange {
+  id            String      @id @default(cuid())
+  deliverableId String
+  userId        String
+  fromStatus    Status
+  toStatus      Status
+  changedAt     DateTime    @default(now())
+  deliverable   Deliverable @relation(fields: [deliverableId], references: [id], onDelete: Cascade)
+  user          User        @relation(fields: [userId], references: [id])
+}
+
+model BoardMeeting {
+  id          String       @id @default(cuid())
+  title       String
+  meetingDate DateTime
+  agenda      String?      @db.Text
+  minutes     String?      @db.Text
+  decisions   String?      @db.Text
+  attendees   String[]
+  createdAt   DateTime     @default(now())
+  files       FileUpload[]
+}
+
+model Report {
+  id          String       @id @default(cuid())
+  title       String
+  type        ReportType
+  periodLabel String
+  summary     String?      @db.Text
+  publishedAt DateTime     @default(now())
+  files       FileUpload[]
+}
+
+model AuditLog {
+  id            String       @id @default(cuid())
+  userId        String?
+  deliverableId String?
+  action        String
+  entityType    String
+  entityId      String?
+  metadata      Json?
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime     @default(now())
+  user          User?        @relation(fields: [userId], references: [id])
+  deliverable   Deliverable? @relation(fields: [deliverableId], references: [id])
+
+  @@index([createdAt])
+  @@index([userId])
+  @@index([entityType, entityId])
+}

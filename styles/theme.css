@@ -1,0 +1,17 @@
+:root {
+  --bg-base: #0a0a0b;
+  --bg-elevated: #131316;
+  --bg-overlay: #1c1c20;
+  --border-subtle: #2a2a2f;
+  --border-strong: #3a3a42;
+  --text-primary: #f5f4f0;
+  --text-secondary: #a8a8ae;
+  --text-tertiary: #6c6c72;
+  --metal-light: #d4d4d8;
+  --metal-mid: #8e8e94;
+  --metal-dark: #4a4a50;
+  --accent-green: #6b8a6b;
+  --accent-amber: #b8945a;
+  --accent-red: #a85a5a;
+  --accent-blue: #5a7a95;
+}
