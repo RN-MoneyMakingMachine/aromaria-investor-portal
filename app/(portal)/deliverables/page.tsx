@@ -128,6 +128,7 @@ export default async function DeliverablesPage({
               completed={p.completed}
               percent={p.percent}
               tone={PHASE_TONE[p.phase]}
+              href={`/deliverables/phase/${p.phase.toLowerCase()}`}
             />
           ))}
         </div>

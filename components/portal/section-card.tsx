@@ -4,6 +4,7 @@ import type { Category } from "@prisma/client";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { CATEGORY_LABEL } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 
 import { ProgressBar, type ProgressTone } from "./progress-bar";
 
@@ -74,6 +75,7 @@ export function PhaseCard({
   completed,
   percent,
   tone,
+  href,
 }: {
   label: string;
   description: string;
@@ -81,17 +83,28 @@ export function PhaseCard({
   completed: number;
   percent: number;
   tone: ProgressTone;
+  href?: string;
 }) {
-  return (
-    <Card className="h-full">
+  const body = (
+    <Card
+      className={cn(
+        "h-full",
+        href && "transition-colors duration-200 group-hover:border-[var(--border-strong)]",
+      )}
+    >
       <CardContent className="flex h-full flex-col gap-6 p-6">
-        <div className="flex flex-col gap-1">
-          <span className="text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">
-            Phase
-          </span>
-          <span className="font-serif text-xl font-light tracking-tight text-[var(--text-primary)]">
-            {label}
-          </span>
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">
+              Phase
+            </span>
+            <span className="font-serif text-xl font-light tracking-tight text-[var(--text-primary)]">
+              {label}
+            </span>
+          </div>
+          {href ? (
+            <ArrowUpRight className="h-4 w-4 text-[var(--text-tertiary)] transition-colors group-hover:text-[var(--text-primary)]" />
+          ) : null}
         </div>
         <p className="text-xs leading-relaxed text-[var(--text-secondary)]">
           {description}
@@ -109,5 +122,12 @@ export function PhaseCard({
         </div>
       </CardContent>
     </Card>
+  );
+
+  if (!href) return body;
+  return (
+    <Link href={href} className="group block h-full">
+      {body}
+    </Link>
   );
 }
