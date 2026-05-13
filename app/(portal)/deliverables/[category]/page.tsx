@@ -15,6 +15,7 @@ import {
   CATEGORY_LABEL,
   PHASE_LABEL,
   STATUS_LABEL,
+  STATUS_LABEL_SHORT,
 } from "@/lib/constants";
 import { listDeliverablesByCategory } from "@/lib/services/deliverables";
 import { requireUser } from "@/lib/session";
@@ -41,6 +42,8 @@ const PHASE_VALUES: Phase[] = [
 const STATUS_VALUES: Status[] = [
   "NOT_STARTED",
   "IN_PROGRESS",
+  "SUBMITTED_FOR_REVIEW",
+  "IN_REVIEW",
   "BLOCKED",
   "COMPLETED",
 ];
@@ -96,7 +99,8 @@ export default async function CategoryPage({
 
   const total = items.length;
   const completed = items.filter((d) => d.status === "COMPLETED").length;
-  const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
+  const progressSum = items.reduce((acc, d) => acc + d.progressPercent, 0);
+  const percent = total === 0 ? 0 : Math.round(progressSum / total);
 
   const buildHref = (overrides: Partial<SearchParams>) => {
     const next: Record<string, string> = {};
@@ -293,8 +297,9 @@ function FilterBar({
             key={s}
             href={buildHref({ status: s })}
             active={statusFilter === s}
+            title={STATUS_LABEL[s]}
           >
-            {STATUS_LABEL[s]}
+            {STATUS_LABEL_SHORT[s] ?? STATUS_LABEL[s]}
           </FilterChip>
         ))}
       </FilterGroup>
@@ -363,15 +368,18 @@ function FilterGroup({
 function FilterChip({
   href,
   active,
+  title,
   children,
 }: {
   href: string;
   active: boolean;
+  title?: string;
   children: React.ReactNode;
 }) {
   return (
     <Link
       href={href}
+      title={title}
       className={cn(
         "rounded-sm border px-2 py-1 text-[10px] uppercase tracking-widest transition-colors",
         active

@@ -70,6 +70,7 @@ export default async function DeliverablesPage({
             label="Wire Readiness"
             completed={metrics.wire.completed}
             total={metrics.wire.total}
+            percent={metrics.wire.percent}
             tone={wireTone}
             hint={
               metrics.wire.completed < metrics.wire.total
@@ -81,20 +82,23 @@ export default async function DeliverablesPage({
             label="Day 60 Readiness"
             completed={metrics.committed.completed}
             total={metrics.committed.total}
+            percent={metrics.committed.percent}
             tone="amber"
           />
           <ProgressHeadline
             label="Post Signing Legal"
             completed={metrics.postSigning.completed}
             total={metrics.postSigning.total}
+            percent={metrics.postSigning.percent}
             tone="red"
           />
           <ProgressHeadline
             label="Overall"
             completed={metrics.overall.completed}
             total={metrics.overall.total}
+            percent={metrics.overall.percent}
             tone="metal"
-            hint={`Weighted, ${metrics.overall.percent}%`}
+            hint="Weighted"
           />
         </CardContent>
       </Card>

@@ -40,16 +40,19 @@ export function ProgressHeadline({
   label,
   completed,
   total,
+  percent,
   tone = "metal",
   hint,
 }: {
   label: string;
   completed: number;
   total: number;
+  percent?: number;
   tone?: ProgressTone;
   hint?: string;
 }) {
-  const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
+  const computed = total === 0 ? 0 : Math.round((completed / total) * 100);
+  const value = percent ?? computed;
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between gap-3">
@@ -60,12 +63,10 @@ export function ProgressHeadline({
           {completed} of {total}
         </span>
       </div>
-      <ProgressBar value={percent} tone={tone} />
-      {hint ? (
-        <p className="text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">
-          {hint}
-        </p>
-      ) : null}
+      <ProgressBar value={value} tone={tone} />
+      <p className="tabular font-mono text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">
+        {value}%{hint ? <span className="ml-2">{hint}</span> : null}
+      </p>
     </div>
   );
 }
