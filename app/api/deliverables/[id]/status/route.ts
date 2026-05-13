@@ -5,7 +5,14 @@ import { auth } from "@/lib/auth";
 import { changeStatus } from "@/lib/services/status";
 import type { SessionUser } from "@/lib/rbac";
 
-const ALLOWED: Status[] = ["NOT_STARTED", "IN_PROGRESS", "BLOCKED", "COMPLETED"];
+const ALLOWED: Status[] = [
+  "NOT_STARTED",
+  "IN_PROGRESS",
+  "SUBMITTED_FOR_REVIEW",
+  "IN_REVIEW",
+  "BLOCKED",
+  "COMPLETED",
+];
 
 export async function POST(
   req: Request,

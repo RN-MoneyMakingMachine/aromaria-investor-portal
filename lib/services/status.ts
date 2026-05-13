@@ -6,17 +6,11 @@ import { prisma } from "@/lib/db";
 import { writeAudit } from "@/lib/audit";
 import type { SessionUser } from "@/lib/rbac";
 import { canEdit } from "@/lib/rbac";
+import { STATUS_PROGRESS } from "@/lib/constants";
 
 export type StatusResult =
   | { ok: true; status: Status }
   | { ok: false; error: string };
-
-const DEFAULT_PROGRESS: Record<Status, number> = {
-  NOT_STARTED: 0,
-  IN_PROGRESS: 50,
-  BLOCKED: 25,
-  COMPLETED: 100,
-};
 
 export async function changeStatus(
   user: SessionUser,
@@ -56,7 +50,7 @@ export async function changeStatus(
       where: { id: deliverableId },
       data: {
         status: toStatus,
-        progressPercent: DEFAULT_PROGRESS[toStatus],
+        progressPercent: STATUS_PROGRESS[toStatus] ?? 0,
       },
     });
     await tx.statusChange.create({
