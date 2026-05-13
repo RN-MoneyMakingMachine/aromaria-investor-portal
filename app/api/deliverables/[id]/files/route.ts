@@ -27,12 +27,18 @@ export async function POST(
     filename = rawHeader || "file";
   }
 
+  const previousVersionId =
+    req.headers.get("x-previous-version-id")?.trim() || undefined;
+  const replacingFinal = req.headers.get("x-replacing-final") === "1";
+
   const result = await uploadDeliverableFile({
     user: session.user as SessionUser,
     deliverableId,
     filename,
     mimeType: req.headers.get("content-type") ?? "application/octet-stream",
     body: req.body,
+    previousVersionId,
+    replacingFinal,
   });
 
   if (!result.ok) {
