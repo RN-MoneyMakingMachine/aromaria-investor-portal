@@ -66,3 +66,45 @@ export async function createComment(
 
   return { ok: true, id: created.id };
 }
+
+export type DeleteCommentResult =
+  | { ok: true; deliverableId: string }
+  | { ok: false; error: string };
+
+export async function deleteComment(
+  user: SessionUser,
+  commentId: string,
+): Promise<DeleteCommentResult> {
+  const comment = await prisma.comment.findUnique({
+    where: { id: commentId },
+    select: {
+      id: true,
+      userId: true,
+      deliverableId: true,
+      _count: { select: { replies: true } },
+    },
+  });
+
+  if (!comment) return { ok: false, error: "Comment not found." };
+  if (comment.userId !== user.id) {
+    return { ok: false, error: "You can only delete your own comments." };
+  }
+  if (comment._count.replies > 0) {
+    return {
+      ok: false,
+      error: "This comment has replies. Delete the replies first.",
+    };
+  }
+
+  await prisma.comment.delete({ where: { id: comment.id } });
+
+  await writeAudit({
+    userId: user.id,
+    deliverableId: comment.deliverableId,
+    action: "COMMENT_DELETED",
+    entityType: "Comment",
+    entityId: comment.id,
+  });
+
+  return { ok: true, deliverableId: comment.deliverableId };
+}

@@ -5,7 +5,7 @@ import type { Side, Status } from "@prisma/client";
 
 import { requireUser } from "@/lib/session";
 import { revokeApproval, toggleApproval } from "@/lib/services/approvals";
-import { createComment } from "@/lib/services/comments";
+import { createComment, deleteComment } from "@/lib/services/comments";
 import { changeStatus } from "@/lib/services/status";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
@@ -65,4 +65,14 @@ export async function postCommentAction(
   }
   revalidatePath(`/deliverables/item/${deliverableId}`);
   return {};
+}
+
+export async function deleteCommentAction(
+  commentId: string,
+): Promise<ActionResult> {
+  const user = await requireUser();
+  const result = await deleteComment(user, commentId);
+  if (!result.ok) return result;
+  revalidatePath(`/deliverables/item/${result.deliverableId}`);
+  return { ok: true };
 }
