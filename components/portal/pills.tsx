@@ -5,16 +5,23 @@ import {
   PHASE_LABEL,
   PRIORITY_LABEL,
   STATUS_LABEL,
+  STATUS_LABEL_SHORT,
 } from "@/lib/constants";
 
 export function StatusPill({ status }: { status: Status }) {
   const variant: React.ComponentProps<typeof Badge>["variant"] = {
     NOT_STARTED: "default",
     IN_PROGRESS: "amber",
+    SUBMITTED_FOR_REVIEW: "blue",
+    IN_REVIEW: "amber",
     BLOCKED: "red",
     COMPLETED: "green",
   }[status] as React.ComponentProps<typeof Badge>["variant"];
-  return <Badge variant={variant}>{STATUS_LABEL[status]}</Badge>;
+  return (
+    <Badge variant={variant} title={STATUS_LABEL[status]}>
+      {STATUS_LABEL_SHORT[status] ?? STATUS_LABEL[status]}
+    </Badge>
+  );
 }
 
 export function PriorityPill({ priority }: { priority: Priority }) {

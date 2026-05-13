@@ -11,12 +11,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { STATUS_LABEL } from "@/lib/constants";
+import { STATUS_LABEL, STATUS_LABEL_SHORT, STATUS_PROGRESS } from "@/lib/constants";
 import { changeStatusAction } from "@/app/(portal)/deliverables/actions";
 
 const STATUS_OPTIONS: Status[] = [
   "NOT_STARTED",
   "IN_PROGRESS",
+  "SUBMITTED_FOR_REVIEW",
+  "IN_REVIEW",
   "BLOCKED",
   "COMPLETED",
 ];
@@ -48,18 +50,23 @@ export function StatusChanger({
             {pending ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
             ) : null}
-            <span>{STATUS_LABEL[currentStatus]}</span>
+            <span title={STATUS_LABEL[currentStatus]}>
+              {STATUS_LABEL_SHORT[currentStatus] ?? STATUS_LABEL[currentStatus]}
+            </span>
             <ChevronDown className="h-3.5 w-3.5" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-44">
+        <DropdownMenuContent align="start" className="w-72">
           {STATUS_OPTIONS.map((s) => (
             <DropdownMenuItem
               key={s}
               onSelect={() => pick(s)}
-              className="text-xs uppercase tracking-widest"
+              className="flex items-center justify-between gap-3 text-xs"
             >
-              {STATUS_LABEL[s]}
+              <span className="truncate">{STATUS_LABEL[s]}</span>
+              <span className="tabular font-mono text-[10px] text-[var(--text-tertiary)]">
+                {STATUS_PROGRESS[s] ?? 0}%
+              </span>
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>

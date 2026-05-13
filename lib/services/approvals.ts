@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { writeAudit } from "@/lib/audit";
 import type { SessionUser } from "@/lib/rbac";
 import { canApproveSide, isAdmin } from "@/lib/rbac";
+import { STATUS_PROGRESS } from "@/lib/constants";
 
 export type ApprovalResult =
   | { ok: true; approved: boolean }
@@ -115,14 +116,17 @@ export async function revokeApproval(
     if (deliverable.status === "COMPLETED") {
       await tx.deliverable.update({
         where: { id: deliverableId },
-        data: { status: "IN_PROGRESS", progressPercent: 50 },
+        data: {
+          status: "IN_REVIEW",
+          progressPercent: STATUS_PROGRESS.IN_REVIEW,
+        },
       });
       await tx.statusChange.create({
         data: {
           deliverableId,
           userId: user.id,
           fromStatus: "COMPLETED",
-          toStatus: "IN_PROGRESS",
+          toStatus: "IN_REVIEW",
         },
       });
     }

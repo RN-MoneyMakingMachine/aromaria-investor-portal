@@ -23,8 +23,28 @@ export const ROLE_LABEL: Record<string, string> = {
 export const STATUS_LABEL: Record<string, string> = {
   NOT_STARTED: "Not Started",
   IN_PROGRESS: "In Progress",
+  SUBMITTED_FOR_REVIEW: "Submitted by Nikaido Family Office for review",
+  IN_REVIEW: "In review by OMOY",
   BLOCKED: "Blocked",
   COMPLETED: "Completed",
+};
+
+export const STATUS_LABEL_SHORT: Record<string, string> = {
+  NOT_STARTED: "Not Started",
+  IN_PROGRESS: "In Progress",
+  SUBMITTED_FOR_REVIEW: "Submitted for review",
+  IN_REVIEW: "In review",
+  BLOCKED: "Blocked",
+  COMPLETED: "Completed",
+};
+
+export const STATUS_PROGRESS: Record<string, number> = {
+  NOT_STARTED: 0,
+  IN_PROGRESS: 50,
+  BLOCKED: 25,
+  SUBMITTED_FOR_REVIEW: 75,
+  IN_REVIEW: 85,
+  COMPLETED: 100,
 };
 
 export const PRIORITY_LABEL: Record<string, string> = {
