@@ -4,6 +4,8 @@ export const PORTAL_NAME = "AROMARIA Investor Portal" as const;
 
 export const FOOTER_NOTICE = "Authorised users only. All access logged." as const;
 
+export const MAX_UPLOAD_BYTES = 500 * 1024 * 1024;
+
 export const SIDE_LABEL: Record<string, string> = {
   NIKAIDO: "Nikaido",
   OMOY: "OMOY",

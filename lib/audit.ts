@@ -10,6 +10,7 @@ export type AuditAction =
   | "COMMENTED"
   | "COMMENT_DELETED"
   | "UPLOADED"
+  | "FILE_DELETED"
   | "STATUS_CHANGED"
   | "OWNER_CHANGED"
   | "TARGET_DATE_CHANGED"
