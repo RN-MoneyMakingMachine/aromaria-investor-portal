@@ -444,6 +444,18 @@ const DELIVERABLES: SeedDeliverable[] = [
 ];
 
 async function main() {
+  const existingUsers = await prisma.user.count();
+  const existingDeliverables = await prisma.deliverable.count();
+  if (
+    existingUsers >= USERS.length &&
+    existingDeliverables >= DELIVERABLES.length
+  ) {
+    console.log(
+      `Seed: already complete (${existingUsers} users, ${existingDeliverables} deliverables). Skipping.`,
+    );
+    return;
+  }
+
   console.log("Seeding users...");
   for (const u of USERS) {
     await prisma.user.upsert({
