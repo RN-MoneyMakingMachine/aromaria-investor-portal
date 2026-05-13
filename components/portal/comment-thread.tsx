@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import type { Role, Side } from "@prisma/client";
 
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { ROLE_LABEL, SIDE_LABEL } from "@/lib/constants";
 import { formatTimestamp } from "@/lib/dates";
 import { cn } from "@/lib/utils";
+import { deleteCommentAction } from "@/app/(portal)/deliverables/actions";
 
 import { CommentForm } from "./comment-form";
 
@@ -43,9 +44,11 @@ function group(comments: RawComment[]): Threaded[] {
 export function CommentThread({
   deliverableId,
   comments,
+  currentUserId,
 }: {
   deliverableId: string;
   comments: RawComment[];
+  currentUserId: string;
 }) {
   const threads = group(comments);
 
@@ -71,6 +74,7 @@ export function CommentThread({
               key={t.id}
               comment={t}
               deliverableId={deliverableId}
+              currentUserId={currentUserId}
             />
           ))
         )}
@@ -89,20 +93,32 @@ export function CommentThread({
 function CommentRow({
   comment,
   deliverableId,
+  currentUserId,
 }: {
   comment: Threaded;
   deliverableId: string;
+  currentUserId: string;
 }) {
   const [replyOpen, setReplyOpen] = useState(false);
+  const hasReplies = comment.replies.length > 0;
 
   return (
     <article className="flex flex-col gap-3">
-      <CommentBody comment={comment} />
+      <CommentBody
+        comment={comment}
+        currentUserId={currentUserId}
+        canDelete={!hasReplies}
+      />
 
-      {comment.replies.length > 0 ? (
+      {hasReplies ? (
         <div className="ml-6 flex flex-col gap-4 border-l border-[var(--border-subtle)] pl-6">
           {comment.replies.map((r) => (
-            <CommentBody key={r.id} comment={r} />
+            <CommentBody
+              key={r.id}
+              comment={r}
+              currentUserId={currentUserId}
+              canDelete
+            />
           ))}
         </div>
       ) : null}
@@ -140,7 +156,28 @@ function CommentRow({
   );
 }
 
-function CommentBody({ comment }: { comment: RawComment }) {
+function CommentBody({
+  comment,
+  currentUserId,
+  canDelete,
+}: {
+  comment: RawComment;
+  currentUserId: string;
+  canDelete: boolean;
+}) {
+  const isAuthor = comment.user.id === currentUserId;
+  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  function onDelete() {
+    if (!confirm("Delete this comment? This cannot be undone.")) return;
+    setError(null);
+    startTransition(async () => {
+      const result = await deleteCommentAction(comment.id);
+      if (!result.ok) setError(result.error);
+    });
+  }
+
   return (
     <div className="rounded-sm border border-[var(--border-subtle)] bg-[var(--bg-base)] p-5">
       <header className="flex items-baseline justify-between gap-4">
@@ -169,6 +206,21 @@ function CommentBody({ comment }: { comment: RawComment }) {
       >
         {comment.body}
       </p>
+      {isAuthor && canDelete ? (
+        <div className="mt-3 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={onDelete}
+            disabled={pending}
+            className="text-[10px] uppercase tracking-widest text-[var(--text-tertiary)] transition-colors hover:text-[var(--accent-red)] disabled:opacity-50"
+          >
+            {pending ? "Deleting" : "Delete"}
+          </button>
+          {error ? (
+            <span className="text-[10px] text-[var(--accent-red)]">{error}</span>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }

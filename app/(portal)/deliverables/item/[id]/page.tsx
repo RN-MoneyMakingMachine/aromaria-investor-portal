@@ -132,6 +132,7 @@ export default async function ItemPage({
 
           <CommentThread
             deliverableId={deliverable.id}
+            currentUserId={user.id}
             comments={deliverable.comments.map((c) => ({
               id: c.id,
               body: c.body,
@@ -266,6 +267,7 @@ function humanAction(action: string): string {
     APPROVED: "Approval recorded",
     REVOKED: "Approval revoked",
     COMMENTED: "Comment posted",
+    COMMENT_DELETED: "Comment deleted",
     UPLOADED: "File uploaded",
     STATUS_CHANGED: "Status changed",
     LOGGED_IN: "Signed in",

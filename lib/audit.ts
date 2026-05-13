@@ -8,6 +8,7 @@ export type AuditAction =
   | "APPROVED"
   | "REVOKED"
   | "COMMENTED"
+  | "COMMENT_DELETED"
   | "UPLOADED"
   | "STATUS_CHANGED"
   | "OWNER_CHANGED"
