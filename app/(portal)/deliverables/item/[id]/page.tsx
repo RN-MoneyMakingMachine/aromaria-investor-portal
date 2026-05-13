@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Download, Lock } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -21,7 +21,7 @@ import {
 } from "@/lib/constants";
 import { formatDate, formatTimestamp } from "@/lib/dates";
 import { getDeliverable } from "@/lib/services/deliverables";
-import { listDeliverableFiles } from "@/lib/services/files";
+import { listDeliverableChains } from "@/lib/services/files";
 import { canEdit } from "@/lib/rbac";
 import { requireUser } from "@/lib/session";
 
@@ -36,7 +36,8 @@ export default async function ItemPage({
   const deliverable = await getDeliverable(id);
   if (!deliverable) notFound();
 
-  const files = await listDeliverableFiles(deliverable.id);
+  const chains = await listDeliverableChains(deliverable.id);
+  const finalChain = chains.find((c) => c.chainHasFinal) ?? null;
 
   const nikaidoApproval =
     deliverable.approvals.find((a) => a.side === "NIKAIDO") ?? null;
@@ -132,18 +133,24 @@ export default async function ItemPage({
             />
           </section>
 
+          {finalChain ? (
+            <FinalDocumentCard
+              deliverableId={deliverable.id}
+              filename={
+                finalChain.history.find((h) => h.id === finalChain.finalId)
+                  ?.filename ??
+                (finalChain.head.id === finalChain.finalId
+                  ? finalChain.head.filename
+                  : "Final document")
+              }
+            />
+          ) : null}
+
           <FileUploader
             deliverableId={deliverable.id}
             currentUserId={user.id}
             canEdit={canEdit(user)}
-            files={files.map((f) => ({
-              id: f.id,
-              filename: f.filename,
-              mimeType: f.mimeType,
-              sizeBytes: f.sizeBytes,
-              uploadedAt: f.uploadedAt,
-              user: { id: f.user.id, name: f.user.name },
-            }))}
+            chains={chains}
           />
 
           <CommentThread
@@ -255,6 +262,39 @@ function DetailRow({
   );
 }
 
+function FinalDocumentCard({
+  deliverableId,
+  filename,
+}: {
+  deliverableId: string;
+  filename: string;
+}) {
+  return (
+    <Card className="border-[var(--accent-green)]">
+      <CardContent className="flex items-center justify-between gap-4 p-5">
+        <div className="flex items-center gap-3">
+          <Lock className="h-4 w-4 text-[var(--accent-green)]" />
+          <div className="flex flex-col">
+            <span className="text-[10px] uppercase tracking-widest text-[var(--accent-green)]">
+              Final document
+            </span>
+            <span className="text-sm text-[var(--text-primary)]">
+              {filename}
+            </span>
+          </div>
+        </div>
+        <a
+          href={`/api/deliverables/${deliverableId}/final-document`}
+          className="inline-flex items-center gap-2 rounded-sm border border-[var(--accent-green)] px-3 py-1.5 text-[10px] uppercase tracking-widest text-[var(--accent-green)] transition-colors hover:bg-[color-mix(in_srgb,var(--accent-green)_10%,transparent)]"
+        >
+          <Download className="h-3 w-3" />
+          Download final
+        </a>
+      </CardContent>
+    </Card>
+  );
+}
+
 function humanAction(action: string): string {
   const map: Record<string, string> = {
     APPROVED: "Approval recorded",
@@ -262,7 +302,12 @@ function humanAction(action: string): string {
     COMMENTED: "Comment posted",
     COMMENT_DELETED: "Comment deleted",
     UPLOADED: "File uploaded",
+    VERSION_UPLOADED: "New version uploaded",
     FILE_DELETED: "File deleted",
+    MARKED_FINAL: "Marked as final",
+    UNMARKED_FINAL: "Final mark removed",
+    AI_DIFF_DONE: "AI change summary ready",
+    AI_DIFF_ERROR: "AI change summary failed",
     STATUS_CHANGED: "Status changed",
     LOGGED_IN: "Signed in",
     LOGGED_OUT: "Signed out",

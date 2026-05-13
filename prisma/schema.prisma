@@ -164,22 +164,35 @@ model Comment {
 }
 
 model FileUpload {
-  id            String        @id @default(cuid())
-  deliverableId String?
-  reportId      String?
-  meetingId     String?
-  userId        String
-  filename      String
-  url           String
-  mimeType      String
-  sizeBytes     Int
-  version       Int           @default(1)
-  isCurrent     Boolean       @default(true)
-  uploadedAt    DateTime      @default(now())
-  deliverable   Deliverable?  @relation(fields: [deliverableId], references: [id])
-  report        Report?       @relation(fields: [reportId], references: [id])
-  meeting       BoardMeeting? @relation(fields: [meetingId], references: [id])
-  user          User          @relation(fields: [userId], references: [id])
+  id                String        @id @default(cuid())
+  deliverableId     String?
+  reportId          String?
+  meetingId         String?
+  userId            String
+  filename          String
+  url               String
+  mimeType          String
+  sizeBytes         Int
+  version           Int           @default(1)
+  isCurrent         Boolean       @default(true)
+  isFinal           Boolean       @default(false)
+  previousVersionId String?
+  aiDiffStatus      String?
+  aiDiffSummary     String?       @db.Text
+  aiDiffError       String?       @db.Text
+  aiDiffModel       String?
+  aiDiffTokensIn    Int?
+  aiDiffTokensOut   Int?
+  uploadedAt        DateTime      @default(now())
+  deliverable       Deliverable?  @relation(fields: [deliverableId], references: [id])
+  report            Report?       @relation(fields: [reportId], references: [id])
+  meeting           BoardMeeting? @relation(fields: [meetingId], references: [id])
+  user              User          @relation(fields: [userId], references: [id])
+  previousVersion   FileUpload?   @relation("VersionChain", fields: [previousVersionId], references: [id], onDelete: SetNull)
+  nextVersions      FileUpload[]  @relation("VersionChain")
+
+  @@index([previousVersionId])
+  @@index([deliverableId, isCurrent])
 }
 
 model StatusChange {
