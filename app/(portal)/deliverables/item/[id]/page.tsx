@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, FileText } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ApprovalToggle } from "@/components/portal/approval-toggle";
 import { CommentThread } from "@/components/portal/comment-thread";
+import { FileUploader } from "@/components/portal/file-uploader";
 import {
   PhasePill,
   PriorityPill,
@@ -20,6 +21,7 @@ import {
 } from "@/lib/constants";
 import { formatDate, formatTimestamp } from "@/lib/dates";
 import { getDeliverable } from "@/lib/services/deliverables";
+import { listDeliverableFiles } from "@/lib/services/files";
 import { canEdit } from "@/lib/rbac";
 import { requireUser } from "@/lib/session";
 
@@ -33,6 +35,8 @@ export default async function ItemPage({
 
   const deliverable = await getDeliverable(id);
   if (!deliverable) notFound();
+
+  const files = await listDeliverableFiles(deliverable.id);
 
   const nikaidoApproval =
     deliverable.approvals.find((a) => a.side === "NIKAIDO") ?? null;
@@ -128,7 +132,19 @@ export default async function ItemPage({
             />
           </section>
 
-          <FilesPlaceholder />
+          <FileUploader
+            deliverableId={deliverable.id}
+            currentUserId={user.id}
+            canEdit={canEdit(user)}
+            files={files.map((f) => ({
+              id: f.id,
+              filename: f.filename,
+              mimeType: f.mimeType,
+              sizeBytes: f.sizeBytes,
+              uploadedAt: f.uploadedAt,
+              user: { id: f.user.id, name: f.user.name },
+            }))}
+          />
 
           <CommentThread
             deliverableId={deliverable.id}
@@ -239,29 +255,6 @@ function DetailRow({
   );
 }
 
-function FilesPlaceholder() {
-  return (
-    <Card>
-      <CardContent className="flex flex-col items-start gap-3 p-8">
-        <div className="flex items-center gap-3">
-          <FileText className="h-4 w-4 text-[var(--text-tertiary)]" />
-          <span className="text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">
-            Files, version history
-          </span>
-        </div>
-        <h2 className="font-serif text-2xl font-light tracking-tight text-[var(--text-primary)]">
-          Coming soon
-        </h2>
-        <p className="text-sm leading-relaxed text-[var(--text-secondary)]">
-          File uploads, versioning, and download history land alongside the
-          UploadThing integration. Until then, attach documents in your existing
-          channels and reference them in the comment thread.
-        </p>
-      </CardContent>
-    </Card>
-  );
-}
-
 function humanAction(action: string): string {
   const map: Record<string, string> = {
     APPROVED: "Approval recorded",
@@ -269,6 +262,7 @@ function humanAction(action: string): string {
     COMMENTED: "Comment posted",
     COMMENT_DELETED: "Comment deleted",
     UPLOADED: "File uploaded",
+    FILE_DELETED: "File deleted",
     STATUS_CHANGED: "Status changed",
     LOGGED_IN: "Signed in",
     LOGGED_OUT: "Signed out",
