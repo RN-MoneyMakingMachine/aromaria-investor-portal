@@ -226,8 +226,6 @@ const DELIVERABLES: SeedDeliverable[] = [
     sectionRef: "II",
     priority: "HIGH",
     description: "3 to 5 year business plan.",
-    status: "COMPLETED",
-    progressPercent: 100,
   },
   {
     code: "PR-13",
@@ -237,8 +235,6 @@ const DELIVERABLES: SeedDeliverable[] = [
     sectionRef: "II",
     priority: "HIGH",
     description: "Decision making framework.",
-    status: "COMPLETED",
-    progressPercent: 100,
   },
   {
     code: "PR-14",
@@ -248,8 +244,6 @@ const DELIVERABLES: SeedDeliverable[] = [
     sectionRef: "II",
     priority: "HIGH",
     description: "Compensation framework.",
-    status: "COMPLETED",
-    progressPercent: 100,
   },
   {
     code: "PR-15",
@@ -259,8 +253,6 @@ const DELIVERABLES: SeedDeliverable[] = [
     sectionRef: "II",
     priority: "HIGH",
     description: "HR policies.",
-    status: "COMPLETED",
-    progressPercent: 100,
   },
   {
     code: "PR-16",
@@ -270,8 +262,6 @@ const DELIVERABLES: SeedDeliverable[] = [
     sectionRef: "II",
     priority: "HIGH",
     description: "Corporate governance framework.",
-    status: "COMPLETED",
-    progressPercent: 100,
   },
   {
     code: "PR-17",
@@ -281,8 +271,6 @@ const DELIVERABLES: SeedDeliverable[] = [
     sectionRef: "II",
     priority: "HIGH",
     description: "Decision authority matrix.",
-    status: "COMPLETED",
-    progressPercent: 100,
   },
   {
     code: "PR-18",
@@ -292,8 +280,6 @@ const DELIVERABLES: SeedDeliverable[] = [
     sectionRef: "II",
     priority: "MEDIUM",
     description: "Travel policy.",
-    status: "COMPLETED",
-    progressPercent: 100,
   },
   {
     code: "PR-19",
@@ -303,8 +289,6 @@ const DELIVERABLES: SeedDeliverable[] = [
     sectionRef: "II",
     priority: "HIGH",
     description: "Reporting framework.",
-    status: "COMPLETED",
-    progressPercent: 100,
   },
   {
     code: "PR-20",
@@ -314,8 +298,6 @@ const DELIVERABLES: SeedDeliverable[] = [
     sectionRef: "II",
     priority: "MEDIUM",
     description: "Related party controls.",
-    status: "COMPLETED",
-    progressPercent: 100,
   },
   {
     code: "PR-21",
@@ -325,8 +307,6 @@ const DELIVERABLES: SeedDeliverable[] = [
     sectionRef: "II",
     priority: "HIGH",
     description: "Breach framework.",
-    status: "COMPLETED",
-    progressPercent: 100,
   },
   {
     code: "PR-22",
@@ -336,8 +316,6 @@ const DELIVERABLES: SeedDeliverable[] = [
     sectionRef: "II",
     priority: "HIGH",
     description: "2026 cash flow.",
-    status: "COMPLETED",
-    progressPercent: 100,
   },
   {
     code: "PR-23",
@@ -347,8 +325,6 @@ const DELIVERABLES: SeedDeliverable[] = [
     sectionRef: "II",
     priority: "HIGH",
     description: "Debt and liabilities schedule.",
-    status: "COMPLETED",
-    progressPercent: 100,
   },
   {
     code: "PR-24",
@@ -358,8 +334,6 @@ const DELIVERABLES: SeedDeliverable[] = [
     sectionRef: "II",
     priority: "HIGH",
     description: "Loan treatment.",
-    status: "COMPLETED",
-    progressPercent: 100,
   },
   {
     code: "PR-25",
@@ -369,8 +343,6 @@ const DELIVERABLES: SeedDeliverable[] = [
     sectionRef: "II",
     priority: "HIGH",
     description: "40% ownership structure.",
-    status: "COMPLETED",
-    progressPercent: 100,
   },
   {
     code: "PR-26",
@@ -381,8 +353,6 @@ const DELIVERABLES: SeedDeliverable[] = [
     priority: "HIGH",
     description:
       "Execution of all definitive investment and shareholder documentation implementing ownership, governance and investor protections.",
-    status: "COMPLETED",
-    progressPercent: 100,
   },
   {
     code: "PR-27",
@@ -393,8 +363,6 @@ const DELIVERABLES: SeedDeliverable[] = [
     priority: "HIGH",
     description:
       "Full $5M breakdown, permitted deductions fixed, net fresh cash stated.",
-    status: "COMPLETED",
-    progressPercent: 100,
   },
 
   {
@@ -479,20 +447,9 @@ async function main() {
     });
   }
 
-  const jorge = await prisma.user.findUniqueOrThrow({
-    where: { email: "jnikaido@aromaria.mx" },
-  });
-  const gregoire = await prisma.user.findUniqueOrThrow({
-    where: { email: "gregoire.boissel@creative.com.co" },
-  });
-
   console.log("Seeding deliverables...");
   for (const d of DELIVERABLES) {
-    const isCompleted = d.phase === "COMPLETED_PRE_60D";
-    const status = d.status ?? (isCompleted ? "COMPLETED" : "NOT_STARTED");
-    const progressPercent = d.progressPercent ?? (isCompleted ? 100 : 0);
-
-    const deliverable = await prisma.deliverable.upsert({
+    await prisma.deliverable.upsert({
       where: { code: d.code },
       update: {
         name: d.name,
@@ -512,35 +469,10 @@ async function main() {
         sectionRef: d.sectionRef,
         priority: d.priority,
         implementationTimeline: d.implementationTimeline,
-        status,
-        progressPercent,
+        status: d.status ?? "NOT_STARTED",
+        progressPercent: d.progressPercent ?? 0,
       },
     });
-
-    if (isCompleted) {
-      await prisma.approval.upsert({
-        where: {
-          deliverableId_side: { deliverableId: deliverable.id, side: "NIKAIDO" },
-        },
-        update: {},
-        create: {
-          deliverableId: deliverable.id,
-          userId: jorge.id,
-          side: "NIKAIDO",
-        },
-      });
-      await prisma.approval.upsert({
-        where: {
-          deliverableId_side: { deliverableId: deliverable.id, side: "OMOY" },
-        },
-        update: {},
-        create: {
-          deliverableId: deliverable.id,
-          userId: gregoire.id,
-          side: "OMOY",
-        },
-      });
-    }
   }
 
   const totals = {
