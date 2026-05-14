@@ -27,6 +27,90 @@ const EXTENSION_BY_MIME: Record<string, string> = {
 
 const CONVERSION_TIMEOUT_MS = 60_000;
 const SOFFICE_BIN = process.env.SOFFICE_BIN || "soffice";
+const SOFFICE_PROBE_TIMEOUT_MS = 5_000;
+
+export type SofficeProbe = {
+  ok: boolean;
+  binary: string;
+  version: string | null;
+  error: string | null;
+};
+
+// Cheap "is LibreOffice installed and runnable?" check. Used by /admin to
+// diagnose why "Download as PDF" / "View in browser" routes fail for
+// Office files in production.
+export async function checkSoffice(): Promise<SofficeProbe> {
+  return new Promise<SofficeProbe>((resolve) => {
+    let settled = false;
+    const finish = (probe: SofficeProbe) => {
+      if (settled) return;
+      settled = true;
+      resolve(probe);
+    };
+
+    let proc;
+    try {
+      proc = spawn(SOFFICE_BIN, ["--version"], {
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+    } catch (err) {
+      finish({
+        ok: false,
+        binary: SOFFICE_BIN,
+        version: null,
+        error: err instanceof Error ? err.message : String(err),
+      });
+      return;
+    }
+
+    let stdout = "";
+    let stderr = "";
+    proc.stdout?.on("data", (chunk: Buffer) => {
+      stdout += chunk.toString();
+    });
+    proc.stderr?.on("data", (chunk: Buffer) => {
+      stderr += chunk.toString();
+    });
+
+    const killer = setTimeout(() => {
+      proc.kill("SIGKILL");
+      finish({
+        ok: false,
+        binary: SOFFICE_BIN,
+        version: null,
+        error: "timed out waiting for soffice --version",
+      });
+    }, SOFFICE_PROBE_TIMEOUT_MS);
+
+    proc.on("error", (err) => {
+      clearTimeout(killer);
+      finish({
+        ok: false,
+        binary: SOFFICE_BIN,
+        version: null,
+        error: err.message,
+      });
+    });
+    proc.on("close", (code) => {
+      clearTimeout(killer);
+      if (code === 0) {
+        finish({
+          ok: true,
+          binary: SOFFICE_BIN,
+          version: stdout.trim() || stderr.trim() || "unknown",
+          error: null,
+        });
+      } else {
+        finish({
+          ok: false,
+          binary: SOFFICE_BIN,
+          version: null,
+          error: (stderr || stdout).trim() || `exit ${code ?? "?"}`,
+        });
+      }
+    });
+  });
+}
 
 export type PdfConvertResult =
   | { ok: true; bytes: Buffer }
