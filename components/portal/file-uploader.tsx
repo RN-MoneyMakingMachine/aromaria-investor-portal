@@ -6,6 +6,7 @@ import {
   ChevronDown,
   ChevronRight,
   Download,
+  FileDown,
   FileText,
   Lock,
   Sparkles,
@@ -20,6 +21,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { formatTimestamp } from "@/lib/dates";
 import { MAX_UPLOAD_BYTES } from "@/lib/constants";
+import { isPdfConvertible, pdfFilenameFor } from "@/lib/pdf-convertible";
 import { cn, formatBytes } from "@/lib/utils";
 
 export type ChainEntry = {
@@ -147,6 +149,33 @@ export function FileUploader({
     }
   }
 
+  async function onDownloadPdf(fileId: string, originalFilename: string) {
+    setError(null);
+    setProgress({ label: "Converting", percent: 0 });
+    try {
+      const res = await fetch(`/api/files/${fileId}/pdf`, {
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(body.error ?? `PDF conversion failed (${res.status}).`);
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = pdfFilenameFor(originalFilename);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "PDF conversion failed.");
+    } finally {
+      setProgress(null);
+    }
+  }
+
   async function onToggleFinal(fileId: string, current: boolean) {
     setError(null);
     try {
@@ -237,6 +266,7 @@ export function FileUploader({
                     })
                   }
                   onDelete={onDelete}
+                  onDownloadPdf={onDownloadPdf}
                   onToggleFinal={onToggleFinal}
                 />
               </li>
@@ -255,6 +285,7 @@ function ChainRow({
   busy,
   onUploadVersion,
   onDelete,
+  onDownloadPdf,
   onToggleFinal,
 }: {
   chain: Chain;
@@ -263,6 +294,7 @@ function ChainRow({
   busy: boolean;
   onUploadVersion: (file: File, replacingFinal: boolean) => void;
   onDelete: (fileId: string) => void;
+  onDownloadPdf: (fileId: string, filename: string) => void;
   onToggleFinal: (fileId: string, current: boolean) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -325,6 +357,18 @@ function ChainRow({
           >
             <Download className="h-3.5 w-3.5" />
           </a>
+          {isPdfConvertible(head.mimeType) ? (
+            <button
+              type="button"
+              onClick={() => onDownloadPdf(head.id, head.filename)}
+              disabled={busy}
+              className="rounded-sm p-2 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)] disabled:opacity-50"
+              aria-label={`Download ${head.filename} as PDF`}
+              title="Download as PDF"
+            >
+              <FileDown className="h-3.5 w-3.5" />
+            </button>
+          ) : null}
           {canEdit ? (
             <>
               <input
@@ -428,14 +472,28 @@ function ChainRow({
                         {formatTimestamp(h.uploadedAt)}
                       </span>
                     </div>
-                    <a
-                      href={`/api/files/${h.id}`}
-                      download={h.filename}
-                      className="rounded-sm p-1.5 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-base)] hover:text-[var(--text-primary)]"
-                      aria-label={`Download ${h.filename}`}
-                    >
-                      <Download className="h-3 w-3" />
-                    </a>
+                    <div className="flex shrink-0 items-center gap-1">
+                      <a
+                        href={`/api/files/${h.id}`}
+                        download={h.filename}
+                        className="rounded-sm p-1.5 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-base)] hover:text-[var(--text-primary)]"
+                        aria-label={`Download ${h.filename}`}
+                      >
+                        <Download className="h-3 w-3" />
+                      </a>
+                      {isPdfConvertible(h.mimeType) ? (
+                        <button
+                          type="button"
+                          onClick={() => onDownloadPdf(h.id, h.filename)}
+                          disabled={busy}
+                          className="rounded-sm p-1.5 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-base)] hover:text-[var(--text-primary)] disabled:opacity-50"
+                          aria-label={`Download ${h.filename} as PDF`}
+                          title="Download as PDF"
+                        >
+                          <FileDown className="h-3 w-3" />
+                        </button>
+                      ) : null}
+                    </div>
                   </div>
                   <AiDiffBlock entry={h} compact />
                 </li>
