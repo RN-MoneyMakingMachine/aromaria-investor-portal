@@ -72,3 +72,17 @@ export const CATEGORY_LABEL: Record<string, string> = {
   RISK: "Risk",
   FUNDING: "Funding",
 };
+
+export const REPORT_TYPE_LABEL: Record<string, string> = {
+  FINANCIAL: "Financial",
+  GROWTH: "Growth",
+  CREATIVE: "Creative",
+  SPECIAL_PROJECT: "Special Project",
+};
+
+export const DECISION_STATUS_LABEL: Record<string, string> = {
+  OPEN: "Open",
+  APPROVED: "Approved",
+  DECLINED: "Declined",
+  IMPLEMENTED: "Implemented",
+};

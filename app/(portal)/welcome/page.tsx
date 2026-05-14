@@ -1,7 +1,4 @@
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-
-import { Card, CardContent } from "@/components/ui/card";
+import { DoorCard } from "@/components/portal/door-card";
 import { SIDE_LABEL } from "@/lib/constants";
 import { firstName, requireUser } from "@/lib/session";
 
@@ -36,38 +33,5 @@ export default async function WelcomePage() {
         />
       </div>
     </div>
-  );
-}
-
-function DoorCard({
-  href,
-  eyebrow,
-  title,
-  body,
-}: {
-  href: string;
-  eyebrow: string;
-  title: string;
-  body: string;
-}) {
-  return (
-    <Link href={href} className="group block">
-      <Card className="h-full border-[var(--border-subtle)] bg-gradient-to-br from-[var(--bg-elevated)] via-[var(--bg-base)] to-[var(--bg-base)] transition-colors duration-200 group-hover:border-[var(--metal-mid)]">
-        <CardContent className="flex h-full flex-col gap-8 p-10">
-          <span className="text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">
-            {eyebrow}
-          </span>
-          <h2 className="font-serif text-3xl font-light leading-tight tracking-tight text-[var(--text-primary)]">
-            {title}
-          </h2>
-          <p className="flex-1 text-sm leading-relaxed text-[var(--text-secondary)]">
-            {body}
-          </p>
-          <span className="flex items-center gap-2 text-xs uppercase tracking-widest text-[var(--text-secondary)] transition-colors group-hover:text-[var(--text-primary)]">
-            Enter <ArrowRight className="h-3.5 w-3.5" />
-          </span>
-        </CardContent>
-      </Card>
-    </Link>
   );
 }
