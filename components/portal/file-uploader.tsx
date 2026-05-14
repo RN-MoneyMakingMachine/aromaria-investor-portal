@@ -23,6 +23,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { formatTimestamp } from "@/lib/dates";
 import { MAX_UPLOAD_BYTES } from "@/lib/constants";
 import {
@@ -237,8 +243,9 @@ export function FileUploader({
   }
 
   return (
-    <Card>
-      <CardContent className="flex flex-col gap-5 p-6">
+    <TooltipProvider delayDuration={150}>
+      <Card>
+        <CardContent className="flex flex-col gap-5 p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <FileText className="h-4 w-4 text-[var(--text-tertiary)]" />
@@ -343,8 +350,9 @@ export function FileUploader({
             ))}
           </ul>
         )}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </TooltipProvider>
   );
 }
 
@@ -423,52 +431,68 @@ function ChainRow({
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-1">
           {headView !== "none" ? (
-            <a
-              href={
-                headView === "pdf"
-                  ? `/api/files/${head.id}/pdf?inline=1`
-                  : `/api/files/${head.id}?inline=1`
-              }
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-sm p-2 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]"
-              aria-label={`View ${head.filename} in browser`}
-              title="View in browser"
-            >
-              <Eye className="h-3.5 w-3.5" />
-            </a>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <a
+                  href={
+                    headView === "pdf"
+                      ? `/api/files/${head.id}/pdf?inline=1`
+                      : `/api/files/${head.id}?inline=1`
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-sm p-2 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]"
+                  aria-label={`View ${head.filename} in browser`}
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                </a>
+              </TooltipTrigger>
+              <TooltipContent>View in browser</TooltipContent>
+            </Tooltip>
           ) : null}
-          <a
-            href={`/api/files/${head.id}`}
-            download={head.filename}
-            className="rounded-sm p-2 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]"
-            aria-label={`Download ${head.filename}`}
-            title="Download"
-          >
-            <Download className="h-3.5 w-3.5" />
-          </a>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <a
+                href={`/api/files/${head.id}`}
+                download={head.filename}
+                className="rounded-sm p-2 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]"
+                aria-label={`Download ${head.filename}`}
+              >
+                <Download className="h-3.5 w-3.5" />
+              </a>
+            </TooltipTrigger>
+            <TooltipContent>Download</TooltipContent>
+          </Tooltip>
           {isPdfConvertible(head.mimeType) ? (
-            <button
-              type="button"
-              onClick={() => onDownloadPdf(head.id, head.filename)}
-              disabled={busy}
-              className="rounded-sm p-2 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)] disabled:opacity-50"
-              aria-label={`Download ${head.filename} as PDF`}
-              title="Download as PDF"
-            >
-              <FileDown className="h-3.5 w-3.5" />
-            </button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => onDownloadPdf(head.id, head.filename)}
+                  disabled={busy}
+                  className="rounded-sm p-2 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)] disabled:opacity-50"
+                  aria-label={`Download ${head.filename} as PDF`}
+                >
+                  <FileDown className="h-3.5 w-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Download as PDF</TooltipContent>
+            </Tooltip>
           ) : null}
-          <button
-            type="button"
-            onClick={() => onCopyShareLink(head.id)}
-            disabled={busy}
-            className="rounded-sm p-2 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)] disabled:opacity-50"
-            aria-label={`Copy share link for ${head.filename}`}
-            title="Copy share link"
-          >
-            <Link2 className="h-3.5 w-3.5" />
-          </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={() => onCopyShareLink(head.id)}
+                disabled={busy}
+                className="rounded-sm p-2 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)] disabled:opacity-50"
+                aria-label={`Copy share link for ${head.filename}`}
+              >
+                <Link2 className="h-3.5 w-3.5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Copy share link</TooltipContent>
+          </Tooltip>
           {canEdit ? (
             <>
               <input
@@ -477,46 +501,61 @@ function ChainRow({
                 className="hidden"
                 onChange={onVersionChange}
               />
-              <button
-                type="button"
-                onClick={pickVersion}
-                disabled={busy}
-                className="rounded-sm p-2 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)] disabled:opacity-50"
-                aria-label="Upload new version"
-                title="Upload new version"
-              >
-                <Upload className="h-3.5 w-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => onToggleFinal(head.id, head.isFinal)}
-                disabled={busy}
-                className={cn(
-                  "rounded-sm p-2 transition-colors hover:bg-[var(--bg-elevated)]",
-                  head.isFinal
-                    ? "text-[var(--accent-green)]"
-                    : "text-[var(--text-tertiary)] hover:text-[var(--accent-green)]",
-                )}
-                aria-label={head.isFinal ? "Unmark final" : "Mark final"}
-                title={head.isFinal ? "Unmark final" : "Mark final"}
-              >
-                <Star
-                  className="h-3.5 w-3.5"
-                  fill={head.isFinal ? "currentColor" : "none"}
-                />
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={pickVersion}
+                    disabled={busy}
+                    className="rounded-sm p-2 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)] disabled:opacity-50"
+                    aria-label="Upload new version"
+                  >
+                    <Upload className="h-3.5 w-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Upload new version</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={() => onToggleFinal(head.id, head.isFinal)}
+                    disabled={busy}
+                    className={cn(
+                      "rounded-sm p-2 transition-colors hover:bg-[var(--bg-elevated)]",
+                      head.isFinal
+                        ? "text-[var(--accent-green)]"
+                        : "text-[var(--text-tertiary)] hover:text-[var(--accent-green)]",
+                    )}
+                    aria-label={head.isFinal ? "Unmark final" : "Mark final"}
+                  >
+                    <Star
+                      className="h-3.5 w-3.5"
+                      fill={head.isFinal ? "currentColor" : "none"}
+                    />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {head.isFinal ? "Unmark final" : "Mark final"}
+                </TooltipContent>
+              </Tooltip>
             </>
           ) : null}
           {(canEdit || head.user.id === currentUserId) && !head.isFinal ? (
-            <button
-              type="button"
-              onClick={() => onDelete(head.id)}
-              disabled={busy}
-              className="rounded-sm p-2 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--accent-red)] disabled:opacity-50"
-              aria-label={`Delete ${head.filename}`}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => onDelete(head.id)}
+                  disabled={busy}
+                  className="rounded-sm p-2 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--accent-red)] disabled:opacity-50"
+                  aria-label={`Delete ${head.filename}`}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Delete</TooltipContent>
+            </Tooltip>
           ) : null}
         </div>
       </header>
@@ -605,52 +644,68 @@ function HistoryActions({
   return (
     <div className="flex shrink-0 flex-wrap items-center gap-1">
       {view !== "none" ? (
-        <a
-          href={
-            view === "pdf"
-              ? `/api/files/${entry.id}/pdf?inline=1`
-              : `/api/files/${entry.id}?inline=1`
-          }
-          target="_blank"
-          rel="noopener noreferrer"
-          className="rounded-sm p-1.5 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-base)] hover:text-[var(--text-primary)]"
-          aria-label={`View ${entry.filename} in browser`}
-          title="View in browser"
-        >
-          <Eye className="h-3 w-3" />
-        </a>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <a
+              href={
+                view === "pdf"
+                  ? `/api/files/${entry.id}/pdf?inline=1`
+                  : `/api/files/${entry.id}?inline=1`
+              }
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-sm p-1.5 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-base)] hover:text-[var(--text-primary)]"
+              aria-label={`View ${entry.filename} in browser`}
+            >
+              <Eye className="h-3 w-3" />
+            </a>
+          </TooltipTrigger>
+          <TooltipContent>View in browser</TooltipContent>
+        </Tooltip>
       ) : null}
-      <a
-        href={`/api/files/${entry.id}`}
-        download={entry.filename}
-        className="rounded-sm p-1.5 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-base)] hover:text-[var(--text-primary)]"
-        aria-label={`Download ${entry.filename}`}
-        title="Download"
-      >
-        <Download className="h-3 w-3" />
-      </a>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <a
+            href={`/api/files/${entry.id}`}
+            download={entry.filename}
+            className="rounded-sm p-1.5 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-base)] hover:text-[var(--text-primary)]"
+            aria-label={`Download ${entry.filename}`}
+          >
+            <Download className="h-3 w-3" />
+          </a>
+        </TooltipTrigger>
+        <TooltipContent>Download</TooltipContent>
+      </Tooltip>
       {isPdfConvertible(entry.mimeType) ? (
-        <button
-          type="button"
-          onClick={() => onDownloadPdf(entry.id, entry.filename)}
-          disabled={busy}
-          className="rounded-sm p-1.5 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-base)] hover:text-[var(--text-primary)] disabled:opacity-50"
-          aria-label={`Download ${entry.filename} as PDF`}
-          title="Download as PDF"
-        >
-          <FileDown className="h-3 w-3" />
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={() => onDownloadPdf(entry.id, entry.filename)}
+              disabled={busy}
+              className="rounded-sm p-1.5 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-base)] hover:text-[var(--text-primary)] disabled:opacity-50"
+              aria-label={`Download ${entry.filename} as PDF`}
+            >
+              <FileDown className="h-3 w-3" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>Download as PDF</TooltipContent>
+        </Tooltip>
       ) : null}
-      <button
-        type="button"
-        onClick={() => onCopyShareLink(entry.id)}
-        disabled={busy}
-        className="rounded-sm p-1.5 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-base)] hover:text-[var(--text-primary)] disabled:opacity-50"
-        aria-label={`Copy share link for ${entry.filename}`}
-        title="Copy share link"
-      >
-        <Link2 className="h-3 w-3" />
-      </button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            onClick={() => onCopyShareLink(entry.id)}
+            disabled={busy}
+            className="rounded-sm p-1.5 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-base)] hover:text-[var(--text-primary)] disabled:opacity-50"
+            aria-label={`Copy share link for ${entry.filename}`}
+          >
+            <Link2 className="h-3 w-3" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>Copy share link</TooltipContent>
+      </Tooltip>
     </div>
   );
 }
