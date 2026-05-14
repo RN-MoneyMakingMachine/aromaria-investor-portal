@@ -281,6 +281,14 @@ export async function getFileForDownload(
 ): Promise<FileForDownload | null> {
   // any authenticated portal user can download
   if (!user) return null;
+  return getFileById(fileId);
+}
+
+// Loads a file without checking a session. Use only after some other
+// access-control gate has run (e.g. a verified share-link token).
+export async function getFileById(
+  fileId: string,
+): Promise<FileForDownload | null> {
   const record = await prisma.fileUpload.findUnique({
     where: { id: fileId },
   });

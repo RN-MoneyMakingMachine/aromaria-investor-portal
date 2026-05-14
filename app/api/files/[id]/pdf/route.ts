@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 90;
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const session = await auth();
@@ -42,15 +42,17 @@ export async function GET(
     return NextResponse.json({ error: result.error }, { status: 500 });
   }
 
+  const wantsInline = new URL(req.url).searchParams.get("inline") === "1";
   const downloadName = pdfFilenameFor(file.filename);
   const fallbackName = downloadName.replace(/[^\x20-\x7e]/g, "_");
   const utf8Name = encodeURIComponent(downloadName);
+  const disposition = wantsInline ? "inline" : "attachment";
 
   return new Response(new Uint8Array(result.bytes), {
     headers: {
       "content-type": "application/pdf",
       "content-length": String(result.bytes.length),
-      "content-disposition": `attachment; filename="${fallbackName}"; filename*=UTF-8''${utf8Name}`,
+      "content-disposition": `${disposition}; filename="${fallbackName}"; filename*=UTF-8''${utf8Name}`,
       "cache-control": "private, no-store",
       "x-content-type-options": "nosniff",
     },
