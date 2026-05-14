@@ -25,7 +25,9 @@ export type AuditAction =
   | "MEETING_CREATED"
   | "MEETING_UPDATED"
   | "REPORT_CREATED"
-  | "REPORT_UPDATED";
+  | "REPORT_UPDATED"
+  | "DECISION_CREATED"
+  | "DECISION_UPDATED";
 
 export type AuditEntry = {
   userId?: string | null;

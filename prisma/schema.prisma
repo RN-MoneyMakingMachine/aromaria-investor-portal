@@ -63,6 +63,13 @@ enum ReportType {
   SPECIAL_PROJECT
 }
 
+enum DecisionStatus {
+  OPEN
+  APPROVED
+  DECLINED
+  IMPLEMENTED
+}
+
 model User {
   id            String         @id @default(cuid())
   email         String         @unique
@@ -81,6 +88,7 @@ model User {
   statusChanges StatusChange[]
   uploads       FileUpload[]
   auditEvents   AuditLog[]
+  decisions     Decision[]     @relation("DecisionsCreated")
 }
 
 model Account {
@@ -228,6 +236,22 @@ model Report {
   summary     String?      @db.Text
   publishedAt DateTime     @default(now())
   files       FileUpload[]
+}
+
+model Decision {
+  id          String         @id @default(cuid())
+  title       String
+  summary     String         @db.Text
+  body        String?        @db.Text
+  status      DecisionStatus @default(OPEN)
+  decidedAt   DateTime?
+  createdById String
+  createdBy   User           @relation("DecisionsCreated", fields: [createdById], references: [id])
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
 }
 
 model AuditLog {

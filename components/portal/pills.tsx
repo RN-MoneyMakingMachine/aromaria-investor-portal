@@ -1,9 +1,17 @@
-import type { Phase, Priority, Status } from "@prisma/client";
+import type {
+  DecisionStatus,
+  Phase,
+  Priority,
+  ReportType,
+  Status,
+} from "@prisma/client";
 
 import { Badge } from "@/components/ui/badge";
 import {
+  DECISION_STATUS_LABEL,
   PHASE_LABEL,
   PRIORITY_LABEL,
+  REPORT_TYPE_LABEL,
   STATUS_LABEL,
   STATUS_LABEL_SHORT,
 } from "@/lib/constants";
@@ -36,4 +44,24 @@ export function PriorityPill({ priority }: { priority: Priority }) {
 
 export function PhasePill({ phase }: { phase: Phase }) {
   return <Badge variant="metal">{PHASE_LABEL[phase]}</Badge>;
+}
+
+export function ReportTypePill({ type }: { type: ReportType }) {
+  const variant: React.ComponentProps<typeof Badge>["variant"] = {
+    FINANCIAL: "green",
+    GROWTH: "blue",
+    CREATIVE: "amber",
+    SPECIAL_PROJECT: "metal",
+  }[type] as React.ComponentProps<typeof Badge>["variant"];
+  return <Badge variant={variant}>{REPORT_TYPE_LABEL[type]}</Badge>;
+}
+
+export function DecisionStatusPill({ status }: { status: DecisionStatus }) {
+  const variant: React.ComponentProps<typeof Badge>["variant"] = {
+    OPEN: "amber",
+    APPROVED: "green",
+    DECLINED: "red",
+    IMPLEMENTED: "blue",
+  }[status] as React.ComponentProps<typeof Badge>["variant"];
+  return <Badge variant={variant}>{DECISION_STATUS_LABEL[status]}</Badge>;
 }
