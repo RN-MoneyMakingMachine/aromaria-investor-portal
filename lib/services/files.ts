@@ -487,11 +487,15 @@ export async function getStorageUsage(): Promise<{
 }
 
 export async function listDeliverableFiles(deliverableId: string) {
-  return prisma.fileUpload.findMany({
+  const rows = await prisma.fileUpload.findMany({
     where: { deliverableId, isCurrent: true },
     orderBy: { uploadedAt: "desc" },
     include: { user: { select: { id: true, name: true } } },
   });
+  // Hide rows whose bytes were wiped (e.g. ephemeral container redeploy
+  // before UPLOAD_DIR was pointed at a persistent volume). Clicking them
+  // would 404, so we just stop surfacing them.
+  return rows.filter((r) => existsSync(storagePath(r.id)));
 }
 
 export type ChainEntry = {
@@ -520,11 +524,14 @@ export type DeliverableChain = {
 export async function listDeliverableChains(
   deliverableId: string,
 ): Promise<DeliverableChain[]> {
-  const rows = await prisma.fileUpload.findMany({
+  const allRows = await prisma.fileUpload.findMany({
     where: { deliverableId },
     orderBy: { uploadedAt: "desc" },
     include: { user: { select: { id: true, name: true } } },
   });
+  // Same filter as listDeliverableFiles — only surface rows whose bytes
+  // are actually on disk.
+  const rows = allRows.filter((r) => existsSync(storagePath(r.id)));
 
   // Group rows into chains by walking previousVersionId.
   const byId = new Map<string, (typeof rows)[number]>();
