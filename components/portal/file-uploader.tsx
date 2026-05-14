@@ -7,10 +7,7 @@ import {
   ChevronDown,
   ChevronRight,
   Download,
-  Eye,
-  FileDown,
   FileText,
-  Link2,
   Lock,
   Sparkles,
   Star,
@@ -18,7 +15,6 @@ import {
   Upload,
 } from "lucide-react";
 
-import { createShareLinkAction } from "@/app/(portal)/deliverables/actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,11 +27,6 @@ import {
 } from "@/components/ui/tooltip";
 import { formatTimestamp } from "@/lib/dates";
 import { MAX_UPLOAD_BYTES } from "@/lib/constants";
-import {
-  isPdfConvertible,
-  pdfFilenameFor,
-  viewableInBrowser,
-} from "@/lib/pdf-convertible";
 import { cn, formatBytes } from "@/lib/utils";
 
 export type ChainEntry = {
@@ -77,7 +68,6 @@ export function FileUploader({
   const cameraInput = useRef<HTMLInputElement>(null);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
   const [progress, setProgress] = useState<{
     label: string;
     percent: number;
@@ -150,36 +140,6 @@ export function FileUploader({
     void uploadFile({ file, label: "Uploading" });
   }
 
-  function flashNotice(text: string) {
-    setNotice(text);
-    window.setTimeout(() => {
-      setNotice((current) => (current === text ? null : current));
-    }, 3000);
-  }
-
-  async function onCopyShareLink(fileId: string) {
-    setError(null);
-    try {
-      const result = await createShareLinkAction(fileId, "view");
-      if (!result.ok) {
-        setError(result.error);
-        return;
-      }
-      try {
-        await navigator.clipboard.writeText(result.url);
-        flashNotice("Share link copied to clipboard.");
-      } catch {
-        // Clipboard access can be blocked (e.g. http on non-localhost). Fall
-        // back to a visible prompt so the user can copy manually.
-        window.prompt("Copy this share link:", result.url);
-      }
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Could not create share link.",
-      );
-    }
-  }
-
   async function onDelete(fileId: string) {
     if (!confirm("Delete this file? This cannot be undone.")) return;
     setError(null);
@@ -192,33 +152,6 @@ export function FileUploader({
       startTransition(() => router.refresh());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Delete failed.");
-    }
-  }
-
-  async function onDownloadPdf(fileId: string, originalFilename: string) {
-    setError(null);
-    setProgress({ label: "Converting", percent: 0 });
-    try {
-      const res = await fetch(`/api/files/${fileId}/pdf`, {
-        credentials: "include",
-      });
-      if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(body.error ?? `PDF conversion failed (${res.status}).`);
-      }
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = pdfFilenameFor(originalFilename);
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "PDF conversion failed.");
-    } finally {
-      setProgress(null);
     }
   }
 
@@ -307,10 +240,6 @@ export function FileUploader({
           <p className="text-xs text-[var(--accent-red)]">{error}</p>
         ) : null}
 
-        {notice ? (
-          <p className="text-xs text-[var(--accent-green)]">{notice}</p>
-        ) : null}
-
         {progress !== null ? (
           <div className="h-1 w-full overflow-hidden rounded-sm bg-[var(--bg-elevated)]">
             <div
@@ -342,9 +271,7 @@ export function FileUploader({
                     })
                   }
                   onDelete={onDelete}
-                  onDownloadPdf={onDownloadPdf}
                   onToggleFinal={onToggleFinal}
-                  onCopyShareLink={onCopyShareLink}
                 />
               </li>
             ))}
@@ -363,9 +290,7 @@ function ChainRow({
   busy,
   onUploadVersion,
   onDelete,
-  onDownloadPdf,
   onToggleFinal,
-  onCopyShareLink,
 }: {
   chain: Chain;
   currentUserId: string;
@@ -373,11 +298,8 @@ function ChainRow({
   busy: boolean;
   onUploadVersion: (file: File, replacingFinal: boolean) => void;
   onDelete: (fileId: string) => void;
-  onDownloadPdf: (fileId: string, filename: string) => void;
   onToggleFinal: (fileId: string, current: boolean) => void;
-  onCopyShareLink: (fileId: string) => void;
 }) {
-  const headView = viewableInBrowser(chain.head.mimeType);
   const [open, setOpen] = useState(false);
   const versionInput = useRef<HTMLInputElement>(null);
   const head = chain.head;
@@ -430,26 +352,6 @@ function ChainRow({
           </span>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-1">
-          {headView !== "none" ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <a
-                  href={
-                    headView === "pdf"
-                      ? `/api/files/${head.id}/pdf?inline=1`
-                      : `/api/files/${head.id}?inline=1`
-                  }
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-sm p-2 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]"
-                  aria-label={`View ${head.filename} in browser`}
-                >
-                  <Eye className="h-3.5 w-3.5" />
-                </a>
-              </TooltipTrigger>
-              <TooltipContent>View in browser</TooltipContent>
-            </Tooltip>
-          ) : null}
           <Tooltip>
             <TooltipTrigger asChild>
               <a
@@ -462,36 +364,6 @@ function ChainRow({
               </a>
             </TooltipTrigger>
             <TooltipContent>Download</TooltipContent>
-          </Tooltip>
-          {isPdfConvertible(head.mimeType) ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  onClick={() => onDownloadPdf(head.id, head.filename)}
-                  disabled={busy}
-                  className="rounded-sm p-2 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)] disabled:opacity-50"
-                  aria-label={`Download ${head.filename} as PDF`}
-                >
-                  <FileDown className="h-3.5 w-3.5" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>Download as PDF</TooltipContent>
-            </Tooltip>
-          ) : null}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                onClick={() => onCopyShareLink(head.id)}
-                disabled={busy}
-                className="rounded-sm p-2 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)] disabled:opacity-50"
-                aria-label={`Copy share link for ${head.filename}`}
-              >
-                <Link2 className="h-3.5 w-3.5" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>Copy share link</TooltipContent>
           </Tooltip>
           {canEdit ? (
             <>
@@ -611,12 +483,7 @@ function ChainRow({
                         {formatTimestamp(h.uploadedAt)}
                       </span>
                     </div>
-                    <HistoryActions
-                      entry={h}
-                      busy={busy}
-                      onDownloadPdf={onDownloadPdf}
-                      onCopyShareLink={onCopyShareLink}
-                    />
+                    <HistoryActions entry={h} />
                   </div>
                   <AiDiffBlock entry={h} compact />
                 </li>
@@ -631,38 +498,11 @@ function ChainRow({
 
 function HistoryActions({
   entry,
-  busy,
-  onDownloadPdf,
-  onCopyShareLink,
 }: {
   entry: ChainEntry;
-  busy: boolean;
-  onDownloadPdf: (fileId: string, filename: string) => void;
-  onCopyShareLink: (fileId: string) => void;
 }) {
-  const view = viewableInBrowser(entry.mimeType);
   return (
     <div className="flex shrink-0 flex-wrap items-center gap-1">
-      {view !== "none" ? (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <a
-              href={
-                view === "pdf"
-                  ? `/api/files/${entry.id}/pdf?inline=1`
-                  : `/api/files/${entry.id}?inline=1`
-              }
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-sm p-1.5 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-base)] hover:text-[var(--text-primary)]"
-              aria-label={`View ${entry.filename} in browser`}
-            >
-              <Eye className="h-3 w-3" />
-            </a>
-          </TooltipTrigger>
-          <TooltipContent>View in browser</TooltipContent>
-        </Tooltip>
-      ) : null}
       <Tooltip>
         <TooltipTrigger asChild>
           <a
@@ -675,36 +515,6 @@ function HistoryActions({
           </a>
         </TooltipTrigger>
         <TooltipContent>Download</TooltipContent>
-      </Tooltip>
-      {isPdfConvertible(entry.mimeType) ? (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              onClick={() => onDownloadPdf(entry.id, entry.filename)}
-              disabled={busy}
-              className="rounded-sm p-1.5 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-base)] hover:text-[var(--text-primary)] disabled:opacity-50"
-              aria-label={`Download ${entry.filename} as PDF`}
-            >
-              <FileDown className="h-3 w-3" />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent>Download as PDF</TooltipContent>
-        </Tooltip>
-      ) : null}
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            type="button"
-            onClick={() => onCopyShareLink(entry.id)}
-            disabled={busy}
-            className="rounded-sm p-1.5 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-base)] hover:text-[var(--text-primary)] disabled:opacity-50"
-            aria-label={`Copy share link for ${entry.filename}`}
-          >
-            <Link2 className="h-3 w-3" />
-          </button>
-        </TooltipTrigger>
-        <TooltipContent>Copy share link</TooltipContent>
       </Tooltip>
     </div>
   );
