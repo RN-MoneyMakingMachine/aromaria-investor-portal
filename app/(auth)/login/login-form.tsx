@@ -49,8 +49,8 @@ export function LoginForm() {
 
       <SubmitButton />
 
-      <p className="text-center text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">
-        Development access
+      <p className="text-center text-[10px] uppercase tracking-[0.3em] text-[var(--text-tertiary)]">
+        By invitation only
       </p>
     </form>
   );
