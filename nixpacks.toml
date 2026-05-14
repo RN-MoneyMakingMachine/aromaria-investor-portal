@@ -1,0 +1,10 @@
+# Railway / Nixpacks build config.
+#
+# We need LibreOffice on the runtime image so the portal can convert
+# uploaded .docx / .xlsx / .pptx documents to PDF on demand. The
+# default Node provider does not pull LibreOffice in, so we add it here.
+
+providers = ["node"]
+
+[phases.setup]
+aptPkgs = ["...", "libreoffice", "libreoffice-writer", "libreoffice-calc", "libreoffice-impress", "fonts-liberation", "fonts-dejavu"]
