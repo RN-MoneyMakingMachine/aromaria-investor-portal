@@ -64,6 +64,18 @@ export const ADOPTION_STEPS = {
     "Company-wide meeting to communicate Travel Policy and the new Travel Request process — Jorge Nikaido (CEO) — Month 2",
     "Travel section in Monthly Operating Report, Quarterly Board Pack, and Annual Board Report — high-level summary of travels executed with policy-compliance validation — Interim CFO / CFO function — Monthly, Quarterly, Annual",
   ],
+  "PR-20": [
+    "Related Party Process designed and documented — single unified request workflow covering all uses of Personal Consumption Allowance, Business Gifting, Employee Discount Program, and other Related Party transactions; everyone including shareholders submits a request before using credit or purchasing product at cost — Jorge Nikaido (CEO) + Rodrigo Nikaido (CGO) — Month 1",
+    "Shareholder View on portal operational — visible to Nikaido family and Omoy named individuals showing real-time status of Personal Consumption Allowance, Business Gifting allocations, and any other Related Party balances — Rodrigo Nikaido (CGO) — Month 2",
+    "Accounts Payable pre-payment validation operational — no Related Party payment or product release processed without an approved request in the system — Interim CFO + Accounts Payable — Month 1",
+    "Company-wide communication of the Employee Discount Program — informing all employees of their discount entitlement and how to use it — HR Lead — Month 2",
+    "Company-wide meeting to communicate the Related Party & Anti-Corruption Policy and the unified Related Party Process — Jorge Nikaido (CEO) — Month 2",
+    "Related Party & Anti-Corruption Policy communicated company-wide as part of the Single Governance Suite Acknowledgment — HR Lead — Month 3",
+    "External FCPA / anti-corruption counsel relationship established — Office of the CEO — Month 3",
+    "Annual Related Party Confirmation signed by all named individuals — Office of the CEO — Annual, first round Month 3",
+    "Related Party section in Quarterly Board Pack and Annual Board Report — summary of RP activity with policy-compliance validation — Interim CFO / CFO function — Quarterly, Annual",
+    "Annual full Related Party & Anti-Corruption Policy review in strategic planning cycle — Office of the CEO — Annual",
+  ],
 } as const satisfies Record<string, AdoptionStepDefinition>;
 
 export function getAdoptionSteps(code: string): AdoptionStepDefinition {
