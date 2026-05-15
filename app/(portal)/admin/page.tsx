@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ListChecks } from "lucide-react";
 
 import { PhasePlaceholder } from "@/components/portal/placeholder";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,6 +20,31 @@ export default async function AdminPage() {
 
   return (
     <div className="flex flex-col gap-8 py-12">
+      <Card className="mx-auto w-full max-w-2xl">
+        <CardContent className="p-0">
+          <Link
+            href="/admin/adoption-import"
+            className="flex items-center justify-between gap-4 p-6 transition-colors hover:bg-[var(--bg-elevated)]"
+          >
+            <div className="flex items-center gap-4">
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-sm border border-[var(--border-subtle)] bg-[var(--bg-elevated)] text-[var(--accent-green)]">
+                <ListChecks className="h-4 w-4" />
+              </span>
+              <div className="flex flex-col">
+                <span className="font-serif text-base font-light text-[var(--text-primary)]">
+                  Bulk import adoption steps
+                </span>
+                <span className="text-xs text-[var(--text-tertiary)]">
+                  Paste a checklist; appends to any deliverable, dedupes safely.
+                </span>
+              </div>
+            </div>
+            <span className="text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">
+              Open →
+            </span>
+          </Link>
+        </CardContent>
+      </Card>
       <Card className="mx-auto w-full max-w-2xl">
         <CardContent className="flex flex-col gap-3 p-6">
           <p className="text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">
