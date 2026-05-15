@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,6 +8,24 @@ import { formatTimestamp } from "@/lib/dates";
 import { canEdit } from "@/lib/rbac";
 import { requireUser } from "@/lib/session";
 import { listReports } from "@/lib/services/reports";
+
+const REPORTING_SECTIONS = [
+  {
+    href: "/chambers/reporting/monthly",
+    eyebrow: "Cadence",
+    title: "Monthly Report Template",
+  },
+  {
+    href: "/chambers/reporting/quarterly",
+    eyebrow: "Cadence",
+    title: "Quarterly",
+  },
+  {
+    href: "/chambers/reporting/annual",
+    eyebrow: "Cadence",
+    title: "Annual",
+  },
+] as const;
 
 export default async function ReportingListPage() {
   const user = await requireUser();
@@ -40,6 +59,26 @@ export default async function ReportingListPage() {
           </Button>
         ) : null}
       </header>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {REPORTING_SECTIONS.map((s) => (
+          <Link key={s.href} href={s.href} className="group block">
+            <Card className="h-full transition-colors duration-200 group-hover:border-[var(--border-strong)]">
+              <CardContent className="flex h-full items-start justify-between gap-4 p-6">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">
+                    {s.eyebrow}
+                  </span>
+                  <span className="font-serif text-xl font-light tracking-tight text-[var(--text-primary)]">
+                    {s.title}
+                  </span>
+                </div>
+                <ArrowUpRight className="h-4 w-4 text-[var(--text-tertiary)] transition-colors group-hover:text-[var(--text-primary)]" />
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+      </div>
 
       {reports.length === 0 ? (
         <Card>
