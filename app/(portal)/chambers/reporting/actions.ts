@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import type { ReportType } from "@prisma/client";
 
 import { requireUser } from "@/lib/session";
-import { createReport } from "@/lib/services/reports";
+import { acknowledgeReport, createReport } from "@/lib/services/reports";
 
 export type ReportFormState = {
   error?: string;
@@ -20,6 +20,14 @@ const REPORT_TYPES: ReportType[] = [
   "GROWTH",
   "CREATIVE",
   "SPECIAL_PROJECT",
+  "WEEKLY_BANK_STATEMENT",
+  "MONTHLY_OPERATING",
+  "QUARTERLY_BOARD",
+  "QUARTERLY_INVESTOR",
+  "ANNUAL_AUDITED",
+  "ANNUAL_OPERATING_PLAN",
+  "MATERIAL_EVENT_DISCLOSURE",
+  "UPSIDE_NOTICE",
 ];
 
 export async function createReportAction(
@@ -56,4 +64,17 @@ export async function createReportAction(
 
   revalidatePath("/chambers/reporting");
   redirect(`/chambers/reporting/${result.id}`);
+}
+
+export type AcknowledgeReportResult = { ok: true } | { ok: false; error: string };
+
+export async function acknowledgeReportAction(
+  id: string,
+): Promise<AcknowledgeReportResult> {
+  const user = await requireUser();
+  const r = await acknowledgeReport(user, id);
+  if (!r.ok) return { ok: false, error: r.error };
+  revalidatePath("/chambers/reporting");
+  revalidatePath(`/chambers/reporting/${id}`);
+  return { ok: true };
 }

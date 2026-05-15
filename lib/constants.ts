@@ -78,6 +78,14 @@ export const REPORT_TYPE_LABEL: Record<string, string> = {
   GROWTH: "Growth",
   CREATIVE: "Creative",
   SPECIAL_PROJECT: "Special Project",
+  WEEKLY_BANK_STATEMENT: "Weekly Bank Statement",
+  MONTHLY_OPERATING: "Monthly Operating",
+  QUARTERLY_BOARD: "Quarterly Board",
+  QUARTERLY_INVESTOR: "Quarterly Investor",
+  ANNUAL_AUDITED: "Annual Audited",
+  ANNUAL_OPERATING_PLAN: "Annual Operating Plan",
+  MATERIAL_EVENT_DISCLOSURE: "Material Event",
+  UPSIDE_NOTICE: "Upside Notice",
 };
 
 export const DECISION_STATUS_LABEL: Record<string, string> = {
