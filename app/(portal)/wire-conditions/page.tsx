@@ -1,6 +1,11 @@
 import { BankStatements } from "@/components/portal/bank-statements";
 import { BANK_ACCOUNTS_ORDER } from "@/lib/constants";
-import { canApproveSide, canUpload, type SessionUser } from "@/lib/rbac";
+import {
+  canApproveSide,
+  canEdit,
+  canUpload,
+  type SessionUser,
+} from "@/lib/rbac";
 import { requireUser } from "@/lib/session";
 import {
   computeCombinedStatus,
@@ -27,6 +32,8 @@ export default async function WireConditionsPage() {
       nextDeadlineIso={nextDeadline.toISOString()}
       canUpload={canUpload(user)}
       canReview={canApproveSide(user, "OMOY")}
+      canEdit={canEdit(user)}
+      currentUserId={user.id}
       statements={rows.map((r) => ({
         id: r.id,
         account: r.account,

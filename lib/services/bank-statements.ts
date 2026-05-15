@@ -10,7 +10,12 @@ import { pipeline } from "node:stream/promises";
 import { writeAudit } from "@/lib/audit";
 import { MAX_UPLOAD_BYTES } from "@/lib/constants";
 import { prisma } from "@/lib/db";
-import { canApproveSide, canUpload, type SessionUser } from "@/lib/rbac";
+import {
+  canApproveSide,
+  canEdit,
+  canUpload,
+  type SessionUser,
+} from "@/lib/rbac";
 
 const UPLOAD_DIR =
   process.env.UPLOAD_DIR ?? path.join(process.cwd(), ".uploads");
@@ -287,6 +292,58 @@ export async function markBankStatementReviewed(
     metadata: {
       account: existing.account,
       weekOf: existing.weekOf.toISOString(),
+    },
+  });
+
+  return { ok: true };
+}
+
+export type DeleteResult =
+  | { ok: true }
+  | { ok: false; error: string; status: number };
+
+export async function deleteBankStatement(
+  user: SessionUser,
+  statementId: string,
+): Promise<DeleteResult> {
+  const existing = await prisma.bankStatement.findUnique({
+    where: { id: statementId },
+    select: {
+      id: true,
+      fileId: true,
+      uploadedById: true,
+      account: true,
+      weekOf: true,
+      file: { select: { filename: true } },
+    },
+  });
+  if (!existing) {
+    return { ok: false, error: "Statement not found.", status: 404 };
+  }
+
+  const isOwner = existing.uploadedById === user.id;
+  if (!isOwner && !canEdit(user)) {
+    return {
+      ok: false,
+      error: "Only the uploader or an editor can delete this statement.",
+      status: 403,
+    };
+  }
+
+  // FileUpload row has onDelete: Cascade on BankStatement.fileId, so removing
+  // the file row also removes the BankStatement row.
+  await prisma.fileUpload.delete({ where: { id: existing.fileId } });
+  await unlink(storagePath(existing.fileId)).catch(() => undefined);
+
+  await writeAudit({
+    userId: user.id,
+    action: "BANK_STATEMENT_DELETED",
+    entityType: "BankStatement",
+    entityId: existing.id,
+    metadata: {
+      account: existing.account,
+      weekOf: existing.weekOf.toISOString(),
+      filename: existing.file.filename,
     },
   });
 
