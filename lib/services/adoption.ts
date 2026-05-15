@@ -203,3 +203,111 @@ export async function deleteAdoptionStep(
 
   return { ok: true, deliverableId: existing.deliverableId };
 }
+
+export type BulkImportResult =
+  | {
+      ok: true;
+      deliverableId: string;
+      deliverableName: string;
+      created: number;
+      skipped: number;
+    }
+  | { ok: false; error: string; status: number };
+
+export type BulkCaller =
+  | { kind: "user"; user: SessionUser }
+  | { kind: "system"; source: string };
+
+export async function bulkCreateAdoptionSteps(
+  caller: BulkCaller,
+  deliverableId: string,
+  titles: string[],
+): Promise<BulkImportResult> {
+  if (caller.kind === "user" && !isAdmin(caller.user)) {
+    return {
+      ok: false,
+      error: "Only admins can change the adoption checklist.",
+      status: 403,
+    };
+  }
+
+  const cleaned = titles
+    .map((t) => t.trim())
+    .filter((t) => t.length > 0 && !t.startsWith("#"));
+
+  if (cleaned.length === 0) {
+    return { ok: false, error: "No steps to import.", status: 400 };
+  }
+  if (cleaned.length > 200) {
+    return {
+      ok: false,
+      error: "Too many steps in one request (max 200).",
+      status: 400,
+    };
+  }
+  const tooLong = cleaned.find((t) => t.length > 500);
+  if (tooLong) {
+    return {
+      ok: false,
+      error: `Step title too long (>500 chars): "${tooLong.slice(0, 60)}…"`,
+      status: 400,
+    };
+  }
+
+  const deliverable = await prisma.deliverable.findUnique({
+    where: { id: deliverableId },
+    select: { id: true, name: true },
+  });
+  if (!deliverable) {
+    return { ok: false, error: "Deliverable not found.", status: 404 };
+  }
+
+  const existing = await prisma.adoptionStep.findMany({
+    where: { deliverableId },
+    select: { title: true, order: true },
+    orderBy: { order: "desc" },
+  });
+  const existingKeys = new Set(existing.map((s) => s.title.trim().toLowerCase()));
+  let nextOrder = existing.length > 0 ? existing[0].order + 1 : 0;
+
+  const toCreate: { title: string; order: number }[] = [];
+  for (const title of cleaned) {
+    const key = title.toLowerCase();
+    if (existingKeys.has(key)) continue;
+    existingKeys.add(key);
+    toCreate.push({ title, order: nextOrder });
+    nextOrder += 1;
+  }
+
+  const auditUserId = caller.kind === "user" ? caller.user.id : null;
+  const sourceMeta =
+    caller.kind === "system" ? { source: caller.source } : undefined;
+
+  let created = 0;
+  for (const row of toCreate) {
+    const inserted = await prisma.adoptionStep.create({
+      data: {
+        deliverableId,
+        title: row.title,
+        order: row.order,
+      },
+    });
+    created += 1;
+    await writeAudit({
+      userId: auditUserId,
+      deliverableId,
+      action: "ADOPTION_STEP_CREATED",
+      entityType: "AdoptionStep",
+      entityId: inserted.id,
+      metadata: { title: row.title, bulk: true, ...sourceMeta },
+    });
+  }
+
+  return {
+    ok: true,
+    deliverableId,
+    deliverableName: deliverable.name,
+    created,
+    skipped: cleaned.length - created,
+  };
+}
