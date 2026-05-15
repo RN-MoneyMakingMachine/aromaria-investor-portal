@@ -52,7 +52,7 @@ export function AdoptionProgress({
   return (
     <TooltipProvider delayDuration={150}>
       <Card className="border-t-2 border-t-[var(--accent-green)]">
-        <CardContent className="flex flex-col gap-5 p-6">
+        <CardContent className="flex flex-col gap-5 p-5 md:p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="flex items-center gap-3">
               <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-sm border border-[var(--border-subtle)] bg-[var(--bg-elevated)] text-[var(--accent-green)]">
@@ -144,7 +144,7 @@ function StepRow({
   return (
     <div
       className={cn(
-        "group flex items-start gap-3 rounded-sm px-2 py-2 transition-colors",
+        "group flex items-start gap-3 rounded-sm px-2 py-3 transition-colors md:py-2",
         isChecked
           ? "bg-[color-mix(in_srgb,var(--accent-green)_5%,transparent)] hover:bg-[color-mix(in_srgb,var(--accent-green)_9%,transparent)]"
           : "hover:bg-[var(--bg-elevated)]",
@@ -171,7 +171,7 @@ function StepRow({
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span
           className={cn(
-            "text-sm",
+            "break-words text-sm",
             isChecked
               ? "text-[var(--text-tertiary)] line-through"
               : "text-[var(--text-primary)]",

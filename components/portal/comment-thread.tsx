@@ -111,7 +111,7 @@ function CommentRow({
       />
 
       {hasReplies ? (
-        <div className="ml-6 flex flex-col gap-4 border-l border-[var(--border-subtle)] pl-6">
+        <div className="ml-3 flex flex-col gap-4 border-l border-[var(--border-subtle)] pl-3 md:ml-6 md:pl-6">
           {comment.replies.map((r) => (
             <CommentBody
               key={r.id}
@@ -180,7 +180,7 @@ function CommentBody({
 
   return (
     <div className="rounded-sm border border-[var(--border-subtle)] bg-[var(--bg-base)] p-5">
-      <header className="flex items-baseline justify-between gap-4">
+      <header className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 md:gap-4">
         <div className="flex items-baseline gap-3">
           <span className="text-sm text-[var(--text-primary)]">
             {comment.user.name}

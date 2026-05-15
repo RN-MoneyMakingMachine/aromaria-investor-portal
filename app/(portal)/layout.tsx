@@ -16,8 +16,8 @@ export default async function PortalLayout({
   return (
     <div className="flex min-h-screen flex-col">
       <header className="border-b border-[var(--border-subtle)] bg-[var(--bg-base)]">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-6 px-6 py-5">
-          <div className="flex items-center gap-10">
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-4 md:gap-6 md:px-6 md:py-5">
+          <div className="flex items-center gap-4 md:gap-10">
             <Link
               href="/welcome"
               className="wordmark text-sm text-[var(--metal-light)]"
@@ -33,12 +33,12 @@ export default async function PortalLayout({
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 md:px-6 md:py-10">
         {children}
       </main>
 
-      <footer className="border-t border-[var(--border-subtle)] px-6 py-4">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">
+      <footer className="border-t border-[var(--border-subtle)] px-4 py-4 md:px-6">
+        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-2 text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">
           <span>{FOOTER_NOTICE}</span>
           <span>AROMARIA Investor Portal</span>
         </div>

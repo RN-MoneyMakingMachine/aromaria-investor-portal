@@ -6,9 +6,9 @@ export default async function WelcomePage() {
   const user = await requireUser();
 
   return (
-    <div className="flex flex-col gap-16 py-12">
+    <div className="flex flex-col gap-10 py-8 md:gap-16 md:py-12">
       <header className="flex flex-col gap-3">
-        <h1 className="font-serif text-5xl font-light tracking-tight text-[var(--text-primary)]">
+        <h1 className="font-serif text-3xl font-light tracking-tight text-[var(--text-primary)] md:text-5xl">
           Welcome, {firstName(user.name)}.
         </h1>
         <p className="text-sm text-[var(--text-secondary)]">
