@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { PortalNav } from "@/components/portal/portal-nav";
+import { ThemeToggle } from "@/components/portal/theme-toggle";
 import { UserMenu } from "@/components/portal/user-menu";
 import { FOOTER_NOTICE } from "@/lib/constants";
 import { requireUser } from "@/lib/session";
@@ -25,7 +26,10 @@ export default async function PortalLayout({
             </Link>
             <PortalNav />
           </div>
-          <UserMenu user={user} />
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <UserMenu user={user} />
+          </div>
         </div>
       </header>
 
