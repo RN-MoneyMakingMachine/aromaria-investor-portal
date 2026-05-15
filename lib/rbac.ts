@@ -38,3 +38,25 @@ export function canApproveSide(
 export function isReader(user: SessionUser | null | undefined): boolean {
   return !!user;
 }
+
+export function isNikaidoFamilyMember(
+  user: SessionUser | null | undefined,
+): boolean {
+  return user?.side === "NIKAIDO" && user.role !== "VIEWER";
+}
+
+export function isOmoyInvestor(user: SessionUser | null | undefined): boolean {
+  return user?.side === "OMOY" && user.role !== "VIEWER";
+}
+
+export function isBoardObserver(
+  user: SessionUser | null | undefined,
+): boolean {
+  return user?.role === "VIEWER";
+}
+
+export function canSeeShareholderChamber(
+  user: SessionUser | null | undefined,
+): boolean {
+  return isNikaidoFamilyMember(user) || isOmoyInvestor(user);
+}

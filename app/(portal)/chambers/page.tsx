@@ -1,8 +1,10 @@
 import { DoorCard } from "@/components/portal/door-card";
+import { canSeeShareholderChamber } from "@/lib/rbac";
 import { requireUser } from "@/lib/session";
 
 export default async function ChambersPage() {
-  await requireUser();
+  const user = await requireUser();
+  const showShareholder = canSeeShareholderChamber(user);
 
   return (
     <div className="flex flex-col gap-12 py-6">
@@ -37,6 +39,20 @@ export default async function ChambersPage() {
           title="Commercial Decisions"
           body="Record of decisions taken between the partners with status and implementation date."
         />
+        <DoorCard
+          href="/chambers/governance-suite"
+          eyebrow="Institutional Architecture"
+          title="Governance Suite"
+          body="The eight governance documents and their institutionalisation progress."
+        />
+        {showShareholder ? (
+          <DoorCard
+            href="/chambers/shareholder"
+            eyebrow="Partner-Only"
+            title="Shareholder Chamber"
+            body="Private to Nikaido family and Omoy named individuals. Cap table, ownership records, related-party allowances, and shareholder workflows."
+          />
+        ) : null}
       </div>
     </div>
   );
