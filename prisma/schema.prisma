@@ -97,7 +97,7 @@ model User {
   decisions              Decision[]      @relation("DecisionsCreated")
   bankStatementsUploaded BankStatement[] @relation("BankStatementUploads")
   bankStatementsReviewed BankStatement[] @relation("BankStatementReviews")
-  adoptionStepsChecked   AdoptionStep[]  @relation("AdoptionStepCheckedBy")
+  adoptionStepCompletions AdoptionStepCompletion[] @relation("AdoptionStepCompletions")
 }
 
 model Account {
@@ -155,22 +155,20 @@ model Deliverable {
   files                  FileUpload[]
   statusChanges          StatusChange[]
   auditEvents            AuditLog[]
-  adoptionSteps          AdoptionStep[]
+  adoptionStepCompletions AdoptionStepCompletion[]
 }
 
-model AdoptionStep {
+model AdoptionStepCompletion {
   id            String      @id @default(cuid())
   deliverableId String
-  title         String      @db.Text
-  order         Int         @default(0)
-  checkedAt     DateTime?
-  checkedById   String?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  stepIndex     Int
+  completedById String
+  completedAt   DateTime    @default(now())
   deliverable   Deliverable @relation(fields: [deliverableId], references: [id], onDelete: Cascade)
-  checkedBy     User?       @relation("AdoptionStepCheckedBy", fields: [checkedById], references: [id])
+  completedBy   User        @relation("AdoptionStepCompletions", fields: [completedById], references: [id])
 
-  @@index([deliverableId, order])
+  @@unique([deliverableId, stepIndex])
+  @@index([deliverableId])
 }
 
 model Approval {

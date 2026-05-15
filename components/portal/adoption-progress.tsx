@@ -1,33 +1,21 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check, ListChecks, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Check, ListChecks } from "lucide-react";
 
-import {
-  createAdoptionStepAction,
-  deleteAdoptionStepAction,
-  toggleAdoptionStepAction,
-  updateAdoptionStepAction,
-} from "@/app/(portal)/deliverables/actions";
+import { toggleAdoptionStepAction } from "@/app/(portal)/deliverables/actions";
 import { ProgressBar } from "@/components/portal/progress-bar";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { formatTimestamp } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 
 export type AdoptionStepClient = {
-  id: string;
+  index: number;
   title: string;
-  order: number;
-  checkedAt: string | null;
-  checkedBy: { id: string; name: string } | null;
+  completedAt: string | null;
+  completedBy: { id: string; name: string } | null;
 };
 
 export function AdoptionProgress({
@@ -42,68 +30,24 @@ export function AdoptionProgress({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [busyId, setBusyId] = useState<string | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [addOpen, setAddOpen] = useState(false);
+  const [busyIndex, setBusyIndex] = useState<number | null>(null);
 
-  function refresh() {
-    startTransition(() => router.refresh());
-  }
-
-  const completed = steps.filter((s) => s.checkedAt).length;
+  const completed = steps.filter((s) => s.completedAt).length;
   const total = steps.length;
-
-  async function onToggle(stepId: string) {
-    setError(null);
-    setBusyId(stepId);
-    const result = await toggleAdoptionStepAction(stepId);
-    setBusyId(null);
-    if (!result.ok) {
-      setError(result.error);
-      return;
-    }
-    refresh();
-  }
-
-  async function onDelete(stepId: string, title: string) {
-    if (!confirm(`Delete this step?\n\n"${title}"`)) return;
-    setError(null);
-    setBusyId(stepId);
-    const result = await deleteAdoptionStepAction(stepId);
-    setBusyId(null);
-    if (!result.ok) {
-      setError(result.error);
-      return;
-    }
-    refresh();
-  }
-
-  async function onCreate(title: string): Promise<boolean> {
-    setError(null);
-    const result = await createAdoptionStepAction(deliverableId, title);
-    if (!result.ok) {
-      setError(result.error);
-      return false;
-    }
-    refresh();
-    return true;
-  }
-
-  async function onUpdate(stepId: string, title: string): Promise<boolean> {
-    setError(null);
-    setBusyId(stepId);
-    const result = await updateAdoptionStepAction(stepId, title);
-    setBusyId(null);
-    if (!result.ok) {
-      setError(result.error);
-      return false;
-    }
-    refresh();
-    return true;
-  }
-
   const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
   const isAllDone = total > 0 && completed === total;
+
+  async function onToggle(stepIndex: number) {
+    setError(null);
+    setBusyIndex(stepIndex);
+    const result = await toggleAdoptionStepAction(deliverableId, stepIndex);
+    setBusyIndex(null);
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    startTransition(() => router.refresh());
+  }
 
   return (
     <TooltipProvider delayDuration={150}>
@@ -123,37 +67,23 @@ export function AdoptionProgress({
                 </span>
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              {total > 0 ? (
-                <div className="flex flex-col items-end">
-                  <span
-                    className={cn(
-                      "font-serif text-2xl font-light tabular leading-none",
-                      isAllDone
-                        ? "text-[var(--accent-green)]"
-                        : "text-[var(--text-primary)]",
-                    )}
-                  >
-                    {completed}
-                  </span>
-                  <span className="text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">
-                    of {total}
-                  </span>
-                </div>
-              ) : null}
-              {canManage && !addOpen ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={pending}
-                  onClick={() => setAddOpen(true)}
+            {total > 0 ? (
+              <div className="flex flex-col items-end">
+                <span
+                  className={cn(
+                    "font-serif text-2xl font-light tabular leading-none",
+                    isAllDone
+                      ? "text-[var(--accent-green)]"
+                      : "text-[var(--text-primary)]",
+                  )}
                 >
-                  <Plus className="mr-2 h-3.5 w-3.5" />
-                  Add step
-                </Button>
-              ) : null}
-            </div>
+                  {completed}
+                </span>
+                <span className="text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">
+                  of {total}
+                </span>
+              </div>
+            ) : null}
           </div>
 
           {total > 0 ? (
@@ -181,60 +111,18 @@ export function AdoptionProgress({
             <p className="text-xs text-[var(--accent-red)]">{error}</p>
           ) : null}
 
-          {steps.length === 0 && !addOpen ? (
-            <div className="flex flex-col items-center gap-2 rounded-sm border border-dashed border-[var(--border-subtle)] px-6 py-10 text-center">
-              <ListChecks className="h-8 w-8 text-[var(--text-tertiary)]" />
-              <p className="font-serif text-base font-light tracking-tight text-[var(--text-primary)]">
-                No steps yet
-              </p>
-              {canManage ? (
-                <p className="text-xs text-[var(--text-tertiary)]">
-                  Add the first step to start tracking adoption.
-                </p>
-              ) : null}
-            </div>
-          ) : null}
-
           <ul className="flex flex-col gap-2">
             {steps.map((s) => (
-              <li key={s.id}>
-                {editingId === s.id ? (
-                  <StepEditor
-                    initialTitle={s.title}
-                    busy={pending || busyId === s.id}
-                    onSubmit={async (t) => {
-                      const ok = await onUpdate(s.id, t);
-                      if (ok) setEditingId(null);
-                    }}
-                    onCancel={() => setEditingId(null)}
-                  />
-                ) : (
-                  <StepRow
-                    step={s}
-                    canManage={canManage}
-                    busy={pending || busyId === s.id}
-                    onToggle={() => onToggle(s.id)}
-                    onEdit={() => setEditingId(s.id)}
-                    onDelete={() => onDelete(s.id, s.title)}
-                  />
-                )}
+              <li key={s.index}>
+                <StepRow
+                  step={s}
+                  canManage={canManage}
+                  busy={pending || busyIndex === s.index}
+                  onToggle={() => onToggle(s.index)}
+                />
               </li>
             ))}
           </ul>
-
-          {canManage && addOpen ? (
-            <StepEditor
-              initialTitle=""
-              busy={pending}
-              placeholder="What needs to happen…"
-              submitLabel="Add step"
-              onSubmit={async (t) => {
-                const ok = await onCreate(t);
-                if (ok) setAddOpen(false);
-              }}
-              onCancel={() => setAddOpen(false)}
-            />
-          ) : null}
         </CardContent>
       </Card>
     </TooltipProvider>
@@ -246,17 +134,13 @@ function StepRow({
   canManage,
   busy,
   onToggle,
-  onEdit,
-  onDelete,
 }: {
   step: AdoptionStepClient;
   canManage: boolean;
   busy: boolean;
   onToggle: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
 }) {
-  const isChecked = !!step.checkedAt;
+  const isChecked = !!step.completedAt;
   return (
     <div
       className={cn(
@@ -295,103 +179,14 @@ function StepRow({
         >
           {step.title}
         </span>
-        {isChecked && step.checkedBy && step.checkedAt ? (
+        {isChecked && step.completedBy && step.completedAt ? (
           <span className="text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">
-            {step.checkedBy.name}
+            {step.completedBy.name}
             <span className="mx-1.5">,</span>
-            {formatTimestamp(new Date(step.checkedAt))}
+            {formatTimestamp(new Date(step.completedAt))}
           </span>
         ) : null}
       </div>
-      {canManage ? (
-        <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                onClick={onEdit}
-                disabled={busy}
-                aria-label="Edit step"
-                className="rounded-sm p-1.5 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-base)] hover:text-[var(--text-primary)] disabled:opacity-50"
-              >
-                <Pencil className="h-3 w-3" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>Edit</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                onClick={onDelete}
-                disabled={busy}
-                aria-label="Delete step"
-                className="rounded-sm p-1.5 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-base)] hover:text-[var(--accent-red)] disabled:opacity-50"
-              >
-                <Trash2 className="h-3 w-3" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>Delete</TooltipContent>
-          </Tooltip>
-        </div>
-      ) : null}
     </div>
-  );
-}
-
-function StepEditor({
-  initialTitle,
-  busy,
-  placeholder = "Edit step…",
-  submitLabel = "Save",
-  onSubmit,
-  onCancel,
-}: {
-  initialTitle: string;
-  busy: boolean;
-  placeholder?: string;
-  submitLabel?: string;
-  onSubmit: (title: string) => Promise<void> | void;
-  onCancel: () => void;
-}) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [value, setValue] = useState(initialTitle);
-
-  function attempt(e: React.FormEvent) {
-    e.preventDefault();
-    const t = value.trim();
-    if (!t) return;
-    void onSubmit(t);
-  }
-
-  return (
-    <form
-      onSubmit={attempt}
-      className="flex flex-wrap items-center gap-2 rounded-sm border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-2"
-    >
-      <input
-        ref={inputRef}
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        placeholder={placeholder}
-        autoFocus
-        disabled={busy}
-        className="flex-1 bg-transparent px-2 py-1 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-tertiary)] disabled:opacity-50"
-      />
-      <Button type="submit" variant="primary" size="sm" disabled={busy || !value.trim()}>
-        <Check className="mr-2 h-3.5 w-3.5" />
-        {submitLabel}
-      </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        disabled={busy}
-        onClick={onCancel}
-      >
-        <X className="mr-2 h-3.5 w-3.5" />
-        Cancel
-      </Button>
-    </form>
   );
 }
