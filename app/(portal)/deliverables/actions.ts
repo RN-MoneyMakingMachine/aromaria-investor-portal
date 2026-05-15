@@ -7,6 +7,12 @@ import type { Side, Status } from "@prisma/client";
 import { writeAudit } from "@/lib/audit";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/session";
+import {
+  createAdoptionStep,
+  deleteAdoptionStep,
+  toggleAdoptionStep,
+  updateAdoptionStep,
+} from "@/lib/services/adoption";
 import { revokeApproval, toggleApproval } from "@/lib/services/approvals";
 import { createComment, deleteComment } from "@/lib/services/comments";
 import { changeStatus } from "@/lib/services/status";
@@ -119,4 +125,46 @@ export async function createShareLinkAction(
   });
 
   return { ok: true, url };
+}
+
+export async function createAdoptionStepAction(
+  deliverableId: string,
+  title: string,
+): Promise<ActionResult> {
+  const user = await requireUser();
+  const result = await createAdoptionStep(user, deliverableId, title);
+  if (!result.ok) return { ok: false, error: result.error };
+  revalidatePath(`/deliverables/item/${deliverableId}`);
+  return { ok: true };
+}
+
+export async function updateAdoptionStepAction(
+  stepId: string,
+  title: string,
+): Promise<ActionResult> {
+  const user = await requireUser();
+  const result = await updateAdoptionStep(user, stepId, title);
+  if (!result.ok) return { ok: false, error: result.error };
+  revalidatePath(`/deliverables/item/${result.deliverableId}`);
+  return { ok: true };
+}
+
+export async function toggleAdoptionStepAction(
+  stepId: string,
+): Promise<ActionResult> {
+  const user = await requireUser();
+  const result = await toggleAdoptionStep(user, stepId);
+  if (!result.ok) return { ok: false, error: result.error };
+  revalidatePath(`/deliverables/item/${result.deliverableId}`);
+  return { ok: true };
+}
+
+export async function deleteAdoptionStepAction(
+  stepId: string,
+): Promise<ActionResult> {
+  const user = await requireUser();
+  const result = await deleteAdoptionStep(user, stepId);
+  if (!result.ok) return { ok: false, error: result.error };
+  revalidatePath(`/deliverables/item/${result.deliverableId}`);
+  return { ok: true };
 }
