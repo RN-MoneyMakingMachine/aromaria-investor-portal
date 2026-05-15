@@ -4,6 +4,7 @@ import { ArrowLeft, Download, Lock } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { AdoptionProgress } from "@/components/portal/adoption-progress";
 import { ApprovalToggle } from "@/components/portal/approval-toggle";
 import { CommentThread } from "@/components/portal/comment-thread";
 import { FileUploader } from "@/components/portal/file-uploader";
@@ -20,9 +21,10 @@ import {
   STATUS_LABEL,
 } from "@/lib/constants";
 import { formatDate, formatTimestamp } from "@/lib/dates";
+import { listAdoptionSteps } from "@/lib/services/adoption";
 import { getDeliverable } from "@/lib/services/deliverables";
 import { listDeliverableChains } from "@/lib/services/files";
-import { canEdit } from "@/lib/rbac";
+import { canEdit, isAdmin } from "@/lib/rbac";
 import { requireUser } from "@/lib/session";
 
 export default async function ItemPage({
@@ -38,6 +40,7 @@ export default async function ItemPage({
 
   const chains = await listDeliverableChains(deliverable.id);
   const finalChain = chains.find((c) => c.chainHasFinal) ?? null;
+  const adoptionSteps = await listAdoptionSteps(deliverable.id);
 
   const nikaidoApproval =
     deliverable.approvals.find((a) => a.side === "NIKAIDO") ?? null;
@@ -168,6 +171,18 @@ export default async function ItemPage({
                 role: c.user.role,
                 title: c.user.title,
               },
+            }))}
+          />
+
+          <AdoptionProgress
+            deliverableId={deliverable.id}
+            canManage={isAdmin(user)}
+            steps={adoptionSteps.map((s) => ({
+              id: s.id,
+              title: s.title,
+              order: s.order,
+              checkedAt: s.checkedAt ? s.checkedAt.toISOString() : null,
+              checkedBy: s.checkedBy,
             }))}
           />
         </div>
