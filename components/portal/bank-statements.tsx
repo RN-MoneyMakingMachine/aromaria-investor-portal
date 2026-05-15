@@ -8,6 +8,7 @@ import {
   ChevronRight,
   CircleAlert,
   Download,
+  Trash2,
   Upload,
 } from "lucide-react";
 
@@ -45,6 +46,8 @@ export type BankStatementsProps = {
   nextDeadlineIso: string;
   canUpload: boolean;
   canReview: boolean;
+  canEdit: boolean;
+  currentUserId: string;
 };
 
 export function BankStatements({
@@ -55,6 +58,8 @@ export function BankStatements({
   nextDeadlineIso,
   canUpload,
   canReview,
+  canEdit,
+  currentUserId,
 }: BankStatementsProps) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -63,6 +68,10 @@ export function BankStatements({
 
   function refresh() {
     startTransition(() => router.refresh());
+  }
+
+  function canDeleteRow(row: BankStatementView): boolean {
+    return canEdit || row.uploadedBy.id === currentUserId;
   }
 
   async function onReview(statementId: string) {
@@ -80,6 +89,27 @@ export function BankStatements({
       refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Review failed.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function onDelete(statementId: string, filename: string) {
+    if (!confirm(`Delete "${filename}"? This cannot be undone.`)) return;
+    setError(null);
+    setBusyId(statementId);
+    try {
+      const res = await fetch(
+        `/api/wire-conditions/statements/${statementId}`,
+        { method: "DELETE" },
+      );
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(body.error ?? `Delete failed (${res.status})`);
+      }
+      refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Delete failed.");
     } finally {
       setBusyId(null);
     }
@@ -170,9 +200,11 @@ export function BankStatements({
                 statements={accountRows}
                 canUpload={canUpload}
                 canReview={canReview}
+                canDeleteRow={canDeleteRow}
                 busy={pending || busyId !== null}
                 busyId={busyId}
                 onReview={onReview}
+                onDelete={onDelete}
                 onUploaded={refresh}
                 onError={setError}
               />
@@ -189,9 +221,11 @@ function AccountCard({
   statements,
   canUpload,
   canReview,
+  canDeleteRow,
   busy,
   busyId,
   onReview,
+  onDelete,
   onUploaded,
   onError,
 }: {
@@ -199,9 +233,11 @@ function AccountCard({
   statements: BankStatementView[];
   canUpload: boolean;
   canReview: boolean;
+  canDeleteRow: (row: BankStatementView) => boolean;
   busy: boolean;
   busyId: string | null;
   onReview: (statementId: string) => void;
+  onDelete: (statementId: string, filename: string) => void;
   onUploaded: () => void;
   onError: (msg: string | null) => void;
 }) {
@@ -291,8 +327,10 @@ function AccountCard({
           <StatementRow
             row={latest}
             canReview={canReview}
+            canDelete={canDeleteRow(latest)}
             busy={busy && busyId === latest.id}
             onReview={onReview}
+            onDelete={onDelete}
             prominent
           />
         ) : (
@@ -322,8 +360,10 @@ function AccountCard({
                     <StatementRow
                       row={r}
                       canReview={canReview}
+                      canDelete={canDeleteRow(r)}
                       busy={busy && busyId === r.id}
                       onReview={onReview}
+                      onDelete={onDelete}
                     />
                   </li>
                 ))}
@@ -339,14 +379,18 @@ function AccountCard({
 function StatementRow({
   row,
   canReview,
+  canDelete,
   busy,
   onReview,
+  onDelete,
   prominent = false,
 }: {
   row: BankStatementView;
   canReview: boolean;
+  canDelete: boolean;
   busy: boolean;
   onReview: (statementId: string) => void;
+  onDelete: (statementId: string, filename: string) => void;
   prominent?: boolean;
 }) {
   const weekLabel = new Date(row.weekOf).toLocaleDateString(undefined, {
@@ -425,6 +469,22 @@ function StatementRow({
             <CheckCircle2 className="mr-2 h-3.5 w-3.5" />
             {busy ? "Saving…" : "Reviewed"}
           </Button>
+        ) : null}
+        {canDelete ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={() => onDelete(row.id, row.filename)}
+                disabled={busy}
+                className="rounded-sm p-2 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-base)] hover:text-[var(--accent-red)] disabled:opacity-50"
+                aria-label={`Delete ${row.filename}`}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Delete</TooltipContent>
+          </Tooltip>
         ) : null}
       </div>
     </div>

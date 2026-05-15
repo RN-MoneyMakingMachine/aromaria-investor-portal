@@ -31,7 +31,8 @@ export type AuditAction =
   | "SHARE_LINK_CREATED"
   | "SHARE_LINK_OPENED"
   | "BANK_STATEMENT_UPLOADED"
-  | "BANK_STATEMENT_REVIEWED";
+  | "BANK_STATEMENT_REVIEWED"
+  | "BANK_STATEMENT_DELETED";
 
 export type AuditEntry = {
   userId?: string | null;
