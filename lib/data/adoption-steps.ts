@@ -89,6 +89,14 @@ export const ADOPTION_STEPS = {
     "Corporate Governance Framework communicated company-wide as part of the Single Governance Suite Acknowledgment — HR Lead — Month 3",
     "Quarterly full Corporate Governance Framework review at Board meeting — Office of the CEO — Quarterly",
   ],
+  "PR-21": [
+    "Breach Mechanics Framework communicated to the Board and Omoy Designated Representative with formal acknowledgment — Jorge Nikaido (CEO) — Month 1",
+    "Pre-selected mediator list established (2-3 candidates with commercial governance experience, mutually agreed by both Parties) — Office of the CEO + Omoy Designated Representative — Month 2",
+    "Pre-selected FMV appraiser list established (2-3 candidates of recognized international standing, mutually agreed by both Parties) — Office of the CEO + Omoy Designated Representative — Month 2",
+    "Shareholders Agreement updated by external counsel to reference Breach Mechanics Framework as the binding breach mechanism, including Forced Exit Mechanism procedural protections — Office of the CEO + external counsel — Month 3",
+    "Breach Mechanics Framework communicated company-wide as part of the Single Governance Suite Acknowledgment — HR Lead — Month 3",
+    "Quarterly Breach Mechanics Framework review at Board meeting (status check: no active breaches OR active breach status) — Office of the CEO — Quarterly",
+  ],
 } as const satisfies Record<string, AdoptionStepDefinition>;
 
 export function getAdoptionSteps(code: string): AdoptionStepDefinition {
