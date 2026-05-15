@@ -120,7 +120,7 @@ const DELIVERABLES: SeedDeliverable[] = [
     priority: "CRITICAL",
     implementationTimeline: "Before wire",
     description:
-      "Weekly delivery of complete bank account statements + comments from Mr. LM Canal, in form and substance reasonably satisfactory to the Investor. Reverts to monthly upon CFO appointment and Reporting Policies implementation.",
+      "Weekly delivery of complete bank account statements + commentary from the Interim CFO, in form and substance reasonably satisfactory to the Investor. Reverts to monthly upon CFO appointment and Reporting Policies implementation.",
   },
   {
     code: "WC-03",
