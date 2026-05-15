@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowUpRight, CheckCircle2, CircleAlert } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { ProgressHeadline } from "@/components/portal/progress-bar";
@@ -9,7 +10,13 @@ import {
   getDeliverableMetrics,
   getPhaseSummaries,
 } from "@/lib/services/deliverables";
-import { PHASE_LABEL } from "@/lib/constants";
+import {
+  computeCombinedStatus,
+  daysUntil,
+  listBankStatements,
+  nextMondayDeadline,
+} from "@/lib/services/bank-statements";
+import { BANK_ACCOUNTS_ORDER, PHASE_LABEL } from "@/lib/constants";
 import { requireUser } from "@/lib/session";
 
 type SearchParams = { view?: string };
@@ -41,11 +48,16 @@ export default async function DeliverablesPage({
   const { view } = await searchParams;
   const byPhase = view === "phase";
 
-  const [metrics, categories, phases] = await Promise.all([
+  const [metrics, categories, phases, bankStatements] = await Promise.all([
     getDeliverableMetrics(),
     getCategorySummaries(),
     getPhaseSummaries(),
+    listBankStatements(),
   ]);
+
+  const bankStatus = computeCombinedStatus(bankStatements, BANK_ACCOUNTS_ORDER);
+  const bankDeadline = nextMondayDeadline();
+  const bankDaysLeft = daysUntil(bankDeadline);
 
   const wireTone = metrics.wire.completed < metrics.wire.total ? "red" : "green";
 
@@ -102,6 +114,42 @@ export default async function DeliverablesPage({
           />
         </CardContent>
       </Card>
+
+      <section className="flex flex-col gap-4">
+        <h2 className="font-serif text-2xl font-light tracking-tight text-[var(--text-primary)]">
+          Wire Conditions
+        </h2>
+        <Link href="/wire-conditions" className="group block">
+          <Card className="transition-colors duration-200 group-hover:border-[var(--border-strong)]">
+            <CardContent className="flex flex-wrap items-center justify-between gap-4 p-6">
+              <div className="flex items-center gap-4">
+                {bankStatus === "reviewed" ? (
+                  <CheckCircle2 className="h-6 w-6 shrink-0 text-[var(--accent-green)]" />
+                ) : (
+                  <CircleAlert className="h-6 w-6 shrink-0 text-[var(--accent-red)]" />
+                )}
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">
+                    Weekly bank statements
+                  </span>
+                  <span className="font-serif text-xl font-light tracking-tight text-[var(--text-primary)]">
+                    {bankStatus === "reviewed" ? "All reviewed" : "Needs review"}
+                  </span>
+                  <span className="text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">
+                    Next due{" "}
+                    {bankDaysLeft === 0
+                      ? "today"
+                      : bankDaysLeft === 1
+                        ? "in 1 day"
+                        : `in ${bankDaysLeft} days`}
+                  </span>
+                </div>
+              </div>
+              <ArrowUpRight className="h-4 w-4 text-[var(--text-tertiary)] transition-colors group-hover:text-[var(--text-primary)]" />
+            </CardContent>
+          </Card>
+        </Link>
+      </section>
 
       <div className="flex items-center justify-between gap-4">
         <h2 className="font-serif text-2xl font-light tracking-tight text-[var(--text-primary)]">

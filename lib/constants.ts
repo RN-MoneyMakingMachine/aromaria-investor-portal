@@ -86,3 +86,13 @@ export const DECISION_STATUS_LABEL: Record<string, string> = {
   DECLINED: "Declined",
   IMPLEMENTED: "Implemented",
 };
+
+export const BANK_ACCOUNT_LABEL: Record<string, string> = {
+  AROMARIA_LLC: "AROMARIA LLC",
+  AROMARIA_UK_LTD: "AROMARIA UK LTD",
+  AROMAS_Y_AMBIENTES: "AROMAS Y AMBIENTES SA DE CV",
+};
+
+export const BANK_ACCOUNTS_ORDER: ReadonlyArray<
+  "AROMARIA_LLC" | "AROMARIA_UK_LTD" | "AROMAS_Y_AMBIENTES"
+> = ["AROMARIA_LLC", "AROMARIA_UK_LTD", "AROMAS_Y_AMBIENTES"];
