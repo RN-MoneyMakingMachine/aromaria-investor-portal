@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { prisma } from "@/lib/db";
 import { canEdit } from "@/lib/rbac";
 import { requireUser } from "@/lib/session";
 
@@ -10,6 +11,12 @@ import { NewDecisionForm } from "./new-decision-form";
 export default async function NewDecisionPage() {
   const user = await requireUser();
   if (!canEdit(user)) redirect("/chambers/decisions");
+
+  const owners = await prisma.user.findMany({
+    where: { role: { in: ["ADMIN", "EDITOR"] } },
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  });
 
   return (
     <div className="flex flex-col gap-10 py-6">
@@ -29,8 +36,8 @@ export default async function NewDecisionPage() {
       </header>
 
       <Card className="mx-auto w-full max-w-2xl">
-        <CardContent className="p-8">
-          <NewDecisionForm />
+        <CardContent className="p-5 md:p-8">
+          <NewDecisionForm owners={owners} />
         </CardContent>
       </Card>
     </div>

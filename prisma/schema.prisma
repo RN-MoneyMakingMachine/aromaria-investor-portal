@@ -93,6 +93,20 @@ enum DecisionStatus {
   IMPLEMENTED
 }
 
+enum DecisionZone {
+  ZONE_1
+  ZONE_2
+  ZONE_3
+  ZONE_4
+  EMERGENCY
+  THRESHOLD
+}
+
+enum DecisionTier {
+  TIER_1
+  TIER_2
+}
+
 enum BankAccount {
   AROMARIA_LLC
   AROMARIA_UK_LTD
@@ -123,6 +137,8 @@ model User {
   adoptionStepCompletions   AdoptionStepCompletion[] @relation("AdoptionStepCompletions")
   reportsAcknowledged       Report[]              @relation("ReportAcknowledged")
   informationRequestsAuthor InformationRequest[]  @relation("InformationRequestAuthor")
+  decisionsOwned            Decision[]            @relation("DecisionsOwned")
+  retrospectivesRecorded    DecisionRetrospective[] @relation("RetrospectivesRecorded")
 }
 
 model Account {
@@ -331,19 +347,54 @@ model InformationRequest {
 }
 
 model Decision {
-  id          String         @id @default(cuid())
-  title       String
-  summary     String         @db.Text
-  body        String?        @db.Text
-  status      DecisionStatus @default(OPEN)
-  decidedAt   DateTime?
-  createdById String
-  createdBy   User           @relation("DecisionsCreated", fields: [createdById], references: [id])
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  id                   String         @id @default(cuid())
+  title                String
+  summary              String         @db.Text
+  body                 String?        @db.Text
+  status               DecisionStatus @default(OPEN)
+  zone                 DecisionZone?
+  tier                 DecisionTier?
+  ownerId              String?
+  targetCompletionDate DateTime?
+  decidedAt            DateTime?
+  createdById          String
+  createdBy            User           @relation("DecisionsCreated", fields: [createdById], references: [id])
+  owner                User?          @relation("DecisionsOwned", fields: [ownerId], references: [id])
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+  prerequisites        DecisionDependency[] @relation("Dependent")
+  dependents           DecisionDependency[] @relation("Prerequisite")
+  retrospectives       DecisionRetrospective[]
 
   @@index([status])
+  @@index([zone])
   @@index([createdAt])
+}
+
+model DecisionDependency {
+  id             String   @id @default(cuid())
+  dependentId    String
+  prerequisiteId String
+  createdAt      DateTime @default(now())
+  dependent      Decision @relation("Dependent",     fields: [dependentId],    references: [id], onDelete: Cascade)
+  prerequisite   Decision @relation("Prerequisite",  fields: [prerequisiteId], references: [id], onDelete: Cascade)
+
+  @@unique([dependentId, prerequisiteId])
+  @@index([prerequisiteId])
+}
+
+model DecisionRetrospective {
+  id            String   @id @default(cuid())
+  decisionId    String
+  dayMark       Int
+  content       String   @db.Text
+  recordedById  String
+  recordedAt    DateTime @default(now())
+  decision      Decision @relation(fields: [decisionId], references: [id], onDelete: Cascade)
+  recordedBy    User     @relation("RetrospectivesRecorded", fields: [recordedById], references: [id])
+
+  @@unique([decisionId, dayMark])
+  @@index([decisionId])
 }
 
 model AuditLog {

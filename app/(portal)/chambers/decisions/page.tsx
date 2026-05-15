@@ -2,8 +2,7 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { DecisionStatusPill } from "@/components/portal/pills";
-import { formatDate } from "@/lib/dates";
+import { DecisionFilters } from "@/components/portal/decision-filters";
 import { canEdit } from "@/lib/rbac";
 import { requireUser } from "@/lib/session";
 import { listDecisions } from "@/lib/services/decisions";
@@ -14,7 +13,7 @@ export default async function DecisionsListPage() {
 
   return (
     <div className="flex flex-col gap-10 py-6">
-      <header className="flex items-end justify-between gap-6">
+      <header className="flex flex-wrap items-end justify-between gap-6">
         <div className="flex flex-col gap-2">
           <p className="text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">
             <Link
@@ -25,7 +24,7 @@ export default async function DecisionsListPage() {
             </Link>{" "}
             / Commercial Decisions
           </p>
-          <h1 className="font-serif text-4xl font-light tracking-tight text-[var(--text-primary)]">
+          <h1 className="font-serif text-3xl font-light tracking-tight text-[var(--text-primary)] md:text-4xl">
             Commercial decisions
           </h1>
           <p className="text-sm text-[var(--text-secondary)]">
@@ -48,41 +47,19 @@ export default async function DecisionsListPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="flex flex-col gap-3">
-          {decisions.map((d) => (
-            <Link
-              key={d.id}
-              href={`/chambers/decisions/${d.id}`}
-              className="group block"
-            >
-              <Card className="transition-colors group-hover:border-[var(--metal-mid)]">
-                <CardContent className="flex items-start justify-between gap-6 p-6">
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-3">
-                      <DecisionStatusPill status={d.status} />
-                      <span className="text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">
-                        Logged by {d.createdBy.name}
-                      </span>
-                    </div>
-                    <h2 className="font-serif text-lg font-light tracking-tight text-[var(--text-primary)]">
-                      {d.title}
-                    </h2>
-                    <p className="line-clamp-2 text-sm text-[var(--text-secondary)]">
-                      {d.summary}
-                    </p>
-                  </div>
-                  <div className="shrink-0 text-right text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">
-                    {d.decidedAt ? (
-                      <span>Decided {formatDate(d.decidedAt)}</span>
-                    ) : (
-                      <span>Open</span>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
+        <DecisionFilters
+          decisions={decisions.map((d) => ({
+            id: d.id,
+            title: d.title,
+            summary: d.summary,
+            status: d.status,
+            zone: d.zone,
+            tier: d.tier,
+            decidedAt: d.decidedAt ? d.decidedAt.toISOString() : null,
+            createdBy: { name: d.createdBy.name },
+            owner: d.owner ? { name: d.owner.name } : null,
+          }))}
+        />
       )}
     </div>
   );
