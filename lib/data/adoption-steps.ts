@@ -76,6 +76,14 @@ export const ADOPTION_STEPS = {
     "Related Party section in Quarterly Board Pack and Annual Board Report — summary of RP activity with policy-compliance validation — Interim CFO / CFO function — Quarterly, Annual",
     "Annual full Related Party & Anti-Corruption Policy review in strategic planning cycle — Office of the CEO — Annual",
   ],
+  "WC-01": [
+    "Standard email format created for Project Decisions requiring Unanimous Consent (covers decision description, Authority Matrix classification, supporting materials, Track A/B/C designation, response window, voting confirmation) — Office of the CEO — Week 1",
+    "Monthly Board meetings booked for the next 3 months — Office of the CEO — Week 1",
+    "Board WhatsApp group created for emergency and fast communication — Office of the CEO — Week 1",
+    "Interim Protocol communicated to all Board members and Omoy Designated Representative with the email format and WhatsApp group — Jorge Nikaido (CEO) — Week 1",
+    "Default Approval Mechanism documented outreach steps operational (email at start, midpoint follow-up, direct contact, Crucial backup contact, all logged) — Office of the CEO — Week 2",
+    "Interim Protocol sunsets automatically upon Main Wire release — transition to permanent Authority Matrix governance — Office of the CEO — At Main Wire release",
+  ],
 } as const satisfies Record<string, AdoptionStepDefinition>;
 
 export function getAdoptionSteps(code: string): AdoptionStepDefinition {
