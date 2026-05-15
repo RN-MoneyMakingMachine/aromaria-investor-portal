@@ -52,6 +52,14 @@ export function ReportTypePill({ type }: { type: ReportType }) {
     GROWTH: "blue",
     CREATIVE: "amber",
     SPECIAL_PROJECT: "metal",
+    WEEKLY_BANK_STATEMENT: "blue",
+    MONTHLY_OPERATING: "green",
+    QUARTERLY_BOARD: "amber",
+    QUARTERLY_INVESTOR: "amber",
+    ANNUAL_AUDITED: "metal",
+    ANNUAL_OPERATING_PLAN: "metal",
+    MATERIAL_EVENT_DISCLOSURE: "red",
+    UPSIDE_NOTICE: "green",
   }[type] as React.ComponentProps<typeof Badge>["variant"];
   return <Badge variant={variant}>{REPORT_TYPE_LABEL[type]}</Badge>;
 }

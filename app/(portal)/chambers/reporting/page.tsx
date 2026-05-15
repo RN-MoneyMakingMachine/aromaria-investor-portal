@@ -3,37 +3,69 @@ import { ArrowUpRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ReportTypePill } from "@/components/portal/pills";
-import { formatTimestamp } from "@/lib/dates";
-import { canEdit } from "@/lib/rbac";
+import { CadenceCalendar } from "@/components/portal/cadence-calendar";
+import { ForecastDisciplineBanner } from "@/components/portal/forecast-discipline-banner";
+import { InformationRequestPanel } from "@/components/portal/info-request-panel";
+import { ReportFilters } from "@/components/portal/report-filters";
+import { canEdit, isNikaidoFamilyMember, isOmoyInvestor } from "@/lib/rbac";
 import { requireUser } from "@/lib/session";
+import {
+  getQuarterlySubstantiveCount,
+  listInformationRequests,
+} from "@/lib/services/information-requests";
 import { listReports } from "@/lib/services/reports";
 
-const REPORTING_SECTIONS = [
+const SUBSECTION_CARDS = [
+  {
+    href: "/chambers/reporting/material-events",
+    eyebrow: "Event-driven",
+    title: "Material Event Disclosures",
+  },
   {
     href: "/chambers/reporting/monthly",
     eyebrow: "Cadence",
-    title: "Monthly Report Template",
+    title: "Monthly Template",
   },
   {
     href: "/chambers/reporting/quarterly",
     eyebrow: "Cadence",
-    title: "Quarterly",
+    title: "Quarterly Templates",
   },
   {
     href: "/chambers/reporting/annual",
     eyebrow: "Cadence",
-    title: "Annual",
+    title: "Annual Template",
   },
 ] as const;
 
 export default async function ReportingListPage() {
   const user = await requireUser();
   const reports = await listReports();
+  const [requests, counter] = await Promise.all([
+    listInformationRequests(10),
+    getQuarterlySubstantiveCount(),
+  ]);
+
+  const canRequest = isNikaidoFamilyMember(user) || isOmoyInvestor(user);
+  const calendarReports = reports.map((r) => ({
+    id: r.id,
+    type: r.type,
+    dueDate: r.dueDate,
+    publishedAt: r.publishedAt,
+    status: r.status,
+  }));
+  const filterEntries = reports.map((r) => ({
+    id: r.id,
+    type: r.type,
+    title: r.title,
+    periodLabel: r.periodLabel,
+    publishedAt: r.publishedAt.toISOString(),
+    status: r.status,
+  }));
 
   return (
     <div className="flex flex-col gap-10 py-6">
-      <header className="flex items-end justify-between gap-6">
+      <header className="flex flex-wrap items-end justify-between gap-6">
         <div className="flex flex-col gap-2">
           <p className="text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">
             <Link
@@ -44,13 +76,12 @@ export default async function ReportingListPage() {
             </Link>{" "}
             / Reporting
           </p>
-          <h1 className="font-serif text-4xl font-light tracking-tight text-[var(--text-primary)]">
+          <h1 className="font-serif text-3xl font-light tracking-tight text-[var(--text-primary)] md:text-4xl">
             Reporting
           </h1>
           <p className="text-sm text-[var(--text-secondary)]">
-            {reports.length === 0
-              ? "No reports recorded yet."
-              : `${reports.length} report${reports.length === 1 ? "" : "s"} on file.`}
+            All financial, growth, and operational reports delivered to the
+            partnership.
           </p>
         </div>
         {canEdit(user) ? (
@@ -60,62 +91,55 @@ export default async function ReportingListPage() {
         ) : null}
       </header>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {REPORTING_SECTIONS.map((s) => (
-          <Link key={s.href} href={s.href} className="group block">
-            <Card className="h-full transition-colors duration-200 group-hover:border-[var(--border-strong)]">
-              <CardContent className="flex h-full items-start justify-between gap-4 p-6">
-                <div className="flex flex-col gap-1">
-                  <span className="text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">
-                    {s.eyebrow}
-                  </span>
-                  <span className="font-serif text-xl font-light tracking-tight text-[var(--text-primary)]">
-                    {s.title}
-                  </span>
-                </div>
-                <ArrowUpRight className="h-4 w-4 text-[var(--text-tertiary)] transition-colors group-hover:text-[var(--text-primary)]" />
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
+      <ForecastDisciplineBanner trigger={null} />
 
-      {reports.length === 0 ? (
-        <Card>
-          <CardContent className="p-10 text-center text-sm text-[var(--text-secondary)]">
-            The first report will appear here once recorded.
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {reports.map((r) => (
-            <Link
-              key={r.id}
-              href={`/chambers/reporting/${r.id}`}
-              className="group block"
-            >
-              <Card className="transition-colors group-hover:border-[var(--metal-mid)]">
-                <CardContent className="flex items-center justify-between gap-6 p-6">
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-3">
-                      <ReportTypePill type={r.type} />
+      <Card>
+        <CardContent className="p-5 md:p-6">
+          <CadenceCalendar reports={calendarReports} />
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-10 lg:grid-cols-[2fr_1fr]">
+        <div className="flex flex-col gap-8">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {SUBSECTION_CARDS.map((s) => (
+              <Link key={s.href} href={s.href} className="group block">
+                <Card className="h-full transition-colors duration-200 group-hover:border-[var(--border-strong)]">
+                  <CardContent className="flex h-full items-start justify-between gap-3 p-4">
+                    <div className="flex flex-col gap-1">
                       <span className="text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">
-                        {r.periodLabel}
+                        {s.eyebrow}
+                      </span>
+                      <span className="font-serif text-base font-light leading-tight tracking-tight text-[var(--text-primary)]">
+                        {s.title}
                       </span>
                     </div>
-                    <h2 className="font-serif text-lg font-light tracking-tight text-[var(--text-primary)]">
-                      {r.title}
-                    </h2>
-                  </div>
-                  <div className="text-right text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">
-                    {formatTimestamp(r.publishedAt)}
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+                    <ArrowUpRight className="h-4 w-4 shrink-0 text-[var(--text-tertiary)] transition-colors group-hover:text-[var(--text-primary)]" />
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+
+          <ReportFilters reports={filterEntries} />
         </div>
-      )}
+
+        <aside className="flex flex-col gap-6">
+          <InformationRequestPanel
+            used={counter.used}
+            cap={counter.cap}
+            quarterLabel={counter.quarterLabel}
+            recent={requests.map((r) => ({
+              id: r.id,
+              subject: r.subject,
+              status: r.status,
+              createdAt: r.createdAt,
+              author: r.author,
+            }))}
+            canCreate={canRequest}
+          />
+        </aside>
+      </div>
     </div>
   );
 }

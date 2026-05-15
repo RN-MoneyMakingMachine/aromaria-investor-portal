@@ -4,8 +4,7 @@ import type { ReportType } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
 import { writeAudit } from "@/lib/audit";
-import type { SessionUser } from "@/lib/rbac";
-import { canEdit } from "@/lib/rbac";
+import { canEdit, isNikaidoFamilyMember, isOmoyInvestor, type SessionUser } from "@/lib/rbac";
 
 export type CreateReportInput = {
   title: string;
@@ -99,6 +98,42 @@ export async function updateReport(
     entityType: "Report",
     entityId: id,
     metadata: { fields: Object.keys(data) },
+  });
+
+  return { ok: true, id };
+}
+
+export async function acknowledgeReport(
+  user: SessionUser,
+  id: string,
+): Promise<ReportResult> {
+  if (!isNikaidoFamilyMember(user) && !isOmoyInvestor(user)) {
+    return {
+      ok: false,
+      error: "Only Nikaido family or Omoy investors can acknowledge reports.",
+    };
+  }
+  const existing = await prisma.report.findUnique({
+    where: { id },
+    select: { id: true, acknowledgedAt: true },
+  });
+  if (!existing) return { ok: false, error: "Report not found." };
+  if (existing.acknowledgedAt) return { ok: true, id };
+
+  await prisma.report.update({
+    where: { id },
+    data: {
+      acknowledgedAt: new Date(),
+      acknowledgedById: user.id,
+      status: "ACKNOWLEDGED",
+    },
+  });
+
+  await writeAudit({
+    userId: user.id,
+    action: "REPORT_ACKNOWLEDGED",
+    entityType: "Report",
+    entityId: id,
   });
 
   return { ok: true, id };
