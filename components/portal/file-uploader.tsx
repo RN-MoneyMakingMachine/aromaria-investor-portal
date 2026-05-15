@@ -190,7 +190,7 @@ export function FileUploader({
             </span>
           </div>
           {canEdit ? (
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
               <input
                 ref={newFileInput}
                 type="file"
@@ -212,6 +212,7 @@ export function FileUploader({
                 disabled={progress !== null || pending}
                 onClick={() => cameraInput.current?.click()}
                 title="Take a photo (mobile)"
+                className="w-full justify-center sm:w-auto"
               >
                 <Camera className="mr-2 h-3.5 w-3.5" />
                 Take photo
@@ -222,6 +223,7 @@ export function FileUploader({
                 size="sm"
                 disabled={progress !== null || pending}
                 onClick={() => newFileInput.current?.click()}
+                className="w-full justify-center sm:w-auto"
               >
                 <Upload className="mr-2 h-3.5 w-3.5" />
                 {progress?.label ? `${progress.label} ${progress.percent}%` : "Upload document"}
@@ -357,7 +359,7 @@ function ChainRow({
               <a
                 href={`/api/files/${head.id}`}
                 download={head.filename}
-                className="rounded-sm p-2 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]"
+                className="rounded-sm p-2.5 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)] md:p-2"
                 aria-label={`Download ${head.filename}`}
               >
                 <Download className="h-3.5 w-3.5" />
@@ -379,7 +381,7 @@ function ChainRow({
                     type="button"
                     onClick={pickVersion}
                     disabled={busy}
-                    className="rounded-sm p-2 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)] disabled:opacity-50"
+                    className="rounded-sm p-2.5 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)] disabled:opacity-50 md:p-2"
                     aria-label="Upload new version"
                   >
                     <Upload className="h-3.5 w-3.5" />
@@ -394,7 +396,7 @@ function ChainRow({
                     onClick={() => onToggleFinal(head.id, head.isFinal)}
                     disabled={busy}
                     className={cn(
-                      "rounded-sm p-2 transition-colors hover:bg-[var(--bg-elevated)]",
+                      "rounded-sm p-2.5 transition-colors hover:bg-[var(--bg-elevated)] md:p-2",
                       head.isFinal
                         ? "text-[var(--accent-green)]"
                         : "text-[var(--text-tertiary)] hover:text-[var(--accent-green)]",
@@ -420,7 +422,7 @@ function ChainRow({
                   type="button"
                   onClick={() => onDelete(head.id)}
                   disabled={busy}
-                  className="rounded-sm p-2 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--accent-red)] disabled:opacity-50"
+                  className="rounded-sm p-2.5 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--accent-red)] disabled:opacity-50 md:p-2"
                   aria-label={`Delete ${head.filename}`}
                 >
                   <Trash2 className="h-3.5 w-3.5" />

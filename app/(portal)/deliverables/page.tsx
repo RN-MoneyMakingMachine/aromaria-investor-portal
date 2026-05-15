@@ -62,12 +62,12 @@ export default async function DeliverablesPage({
   const wireTone = metrics.wire.completed < metrics.wire.total ? "red" : "green";
 
   return (
-    <div className="flex flex-col gap-12 py-6">
+    <div className="flex flex-col gap-8 py-4 md:gap-12 md:py-6">
       <header className="flex flex-col gap-2">
         <p className="text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">
           Section I to III, Exhibit A
         </p>
-        <h1 className="font-serif text-4xl font-light tracking-tight text-[var(--text-primary)]">
+        <h1 className="font-serif text-3xl font-light tracking-tight text-[var(--text-primary)] md:text-4xl">
           Investment Deliverables
         </h1>
         <p className="text-sm text-[var(--text-secondary)]">
@@ -77,7 +77,7 @@ export default async function DeliverablesPage({
       </header>
 
       <Card>
-        <CardContent className="grid gap-10 p-8 sm:grid-cols-2 lg:grid-cols-4">
+        <CardContent className="grid gap-8 p-5 sm:grid-cols-2 md:gap-10 md:p-8 lg:grid-cols-4">
           <ProgressHeadline
             label="Wire Readiness"
             completed={metrics.wire.completed}

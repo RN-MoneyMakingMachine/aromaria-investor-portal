@@ -63,7 +63,7 @@ export default async function ItemPage({
         <p className="text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">
           {deliverable.code}
         </p>
-        <h1 className="font-serif text-4xl font-light tracking-tight text-[var(--text-primary)]">
+        <h1 className="font-serif text-3xl font-light tracking-tight text-[var(--text-primary)] md:text-4xl">
           {deliverable.name}
         </h1>
         <div className="flex flex-wrap items-center gap-2">
@@ -76,7 +76,7 @@ export default async function ItemPage({
       <div className="grid gap-10 lg:grid-cols-[2fr_1fr]">
         <div className="flex flex-col gap-10">
           <Card>
-            <CardContent className="flex flex-col gap-4 p-8">
+            <CardContent className="flex flex-col gap-4 p-5 md:p-8">
               <span className="text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">
                 Description, Exhibit A
               </span>
@@ -229,7 +229,7 @@ export default async function ItemPage({
           </Card>
 
           <Card>
-            <CardContent className="flex flex-col gap-4 p-6">
+            <CardContent className="flex flex-col gap-4 p-5 md:p-6">
               <span className="text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">
                 Recent activity
               </span>
@@ -269,7 +269,7 @@ function DetailRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 px-6 py-4">
+    <div className="flex items-center justify-between gap-4 px-5 py-3 md:px-6 md:py-4">
       <span className="text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">
         {label}
       </span>
