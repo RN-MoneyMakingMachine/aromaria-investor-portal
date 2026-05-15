@@ -57,6 +57,13 @@ export const ADOPTION_STEPS = {
     "Monthly Board meeting on-time and content review of all reporting cycles — Office of the CEO — Monthly, ongoing",
     "Annual full Reporting Policy review in strategic planning cycle — Office of the CEO — Annual",
   ],
+  "PR-18": [
+    "Travel approval and payment process designed and documented (defines approver routing by traveler tier and trip cost, integration with Accounts Payable, signature requirements, evidence storage) — Jorge Nikaido (CEO) + Rodrigo Nikaido (CGO) — Month 1",
+    "Accounts Payable pre-payment validation process operational — no travel payment processed until written approval from the appropriate authority is on file based on traveler tier and trip cost — Interim CFO + Accounts Payable — Month 1",
+    "Travel Request template created and operational — Office of the CEO — Month 1",
+    "Company-wide meeting to communicate Travel Policy and the new Travel Request process — Jorge Nikaido (CEO) — Month 2",
+    "Travel section in Monthly Operating Report, Quarterly Board Pack, and Annual Board Report — high-level summary of travels executed with policy-compliance validation — Interim CFO / CFO function — Monthly, Quarterly, Annual",
+  ],
 } as const satisfies Record<string, AdoptionStepDefinition>;
 
 export function getAdoptionSteps(code: string): AdoptionStepDefinition {
