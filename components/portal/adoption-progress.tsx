@@ -10,6 +10,7 @@ import {
   toggleAdoptionStepAction,
   updateAdoptionStepAction,
 } from "@/app/(portal)/deliverables/actions";
+import { ProgressBar } from "@/components/portal/progress-bar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -101,44 +102,97 @@ export function AdoptionProgress({
     return true;
   }
 
+  const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
+  const isAllDone = total > 0 && completed === total;
+
   return (
     <TooltipProvider delayDuration={150}>
-      <Card>
+      <Card className="border-t-2 border-t-[var(--accent-green)]">
         <CardContent className="flex flex-col gap-5 p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="flex items-center gap-3">
-              <ListChecks className="h-4 w-4 text-[var(--text-tertiary)]" />
-              <span className="text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">
-                Adoption Progress
+              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-sm border border-[var(--border-subtle)] bg-[var(--bg-elevated)] text-[var(--accent-green)]">
+                <ListChecks className="h-4 w-4" />
               </span>
-              {total > 0 ? (
-                <span className="tabular font-mono text-[10px] text-[var(--text-tertiary)]">
-                  {completed} / {total}
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">
+                  Implementation
                 </span>
+                <span className="font-serif text-xl font-light tracking-tight text-[var(--text-primary)]">
+                  Adoption Progress
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              {total > 0 ? (
+                <div className="flex flex-col items-end">
+                  <span
+                    className={cn(
+                      "font-serif text-2xl font-light tabular leading-none",
+                      isAllDone
+                        ? "text-[var(--accent-green)]"
+                        : "text-[var(--text-primary)]",
+                    )}
+                  >
+                    {completed}
+                  </span>
+                  <span className="text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">
+                    of {total}
+                  </span>
+                </div>
+              ) : null}
+              {canManage && !addOpen ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={pending}
+                  onClick={() => setAddOpen(true)}
+                >
+                  <Plus className="mr-2 h-3.5 w-3.5" />
+                  Add step
+                </Button>
               ) : null}
             </div>
-            {canManage && !addOpen ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={pending}
-                onClick={() => setAddOpen(true)}
-              >
-                <Plus className="mr-2 h-3.5 w-3.5" />
-                Add step
-              </Button>
-            ) : null}
           </div>
+
+          {total > 0 ? (
+            <div className="flex flex-col gap-1.5">
+              <ProgressBar value={percent} tone="green" />
+              <div className="flex items-baseline justify-between">
+                <span
+                  className={cn(
+                    "text-[10px] uppercase tracking-widest",
+                    isAllDone
+                      ? "text-[var(--accent-green)]"
+                      : "text-transparent",
+                  )}
+                >
+                  All steps complete
+                </span>
+                <span className="tabular font-mono text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">
+                  {percent}%
+                </span>
+              </div>
+            </div>
+          ) : null}
 
           {error ? (
             <p className="text-xs text-[var(--accent-red)]">{error}</p>
           ) : null}
 
           {steps.length === 0 && !addOpen ? (
-            <p className="rounded-sm border border-dashed border-[var(--border-subtle)] px-6 py-8 text-center text-xs uppercase tracking-widest text-[var(--text-tertiary)]">
-              No adoption steps yet
-            </p>
+            <div className="flex flex-col items-center gap-2 rounded-sm border border-dashed border-[var(--border-subtle)] px-6 py-10 text-center">
+              <ListChecks className="h-8 w-8 text-[var(--text-tertiary)]" />
+              <p className="font-serif text-base font-light tracking-tight text-[var(--text-primary)]">
+                No steps yet
+              </p>
+              {canManage ? (
+                <p className="text-xs text-[var(--text-tertiary)]">
+                  Add the first step to start tracking adoption.
+                </p>
+              ) : null}
+            </div>
           ) : null}
 
           <ul className="flex flex-col gap-2">
@@ -204,7 +258,14 @@ function StepRow({
 }) {
   const isChecked = !!step.checkedAt;
   return (
-    <div className="group flex items-start gap-3 rounded-sm px-2 py-2 transition-colors hover:bg-[var(--bg-elevated)]">
+    <div
+      className={cn(
+        "group flex items-start gap-3 rounded-sm px-2 py-2 transition-colors",
+        isChecked
+          ? "bg-[color-mix(in_srgb,var(--accent-green)_5%,transparent)] hover:bg-[color-mix(in_srgb,var(--accent-green)_9%,transparent)]"
+          : "hover:bg-[var(--bg-elevated)]",
+      )}
+    >
       <button
         type="button"
         onClick={onToggle}
@@ -212,16 +273,16 @@ function StepRow({
         aria-pressed={isChecked}
         aria-label={isChecked ? "Mark as not done" : "Mark as done"}
         className={cn(
-          "mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-sm border transition-colors",
+          "mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-sm border transition-all duration-200 active:scale-95",
           isChecked
-            ? "border-[var(--accent-green)] bg-[var(--accent-green)] text-[var(--bg-base)]"
+            ? "border-[var(--accent-green)] bg-[var(--accent-green)] text-[var(--bg-base)] shadow-sm"
             : "border-[var(--border-strong)] bg-transparent text-transparent",
           canManage && !busy
-            ? "hover:border-[var(--accent-green)]"
+            ? "hover:border-[var(--accent-green)] hover:bg-[color-mix(in_srgb,var(--accent-green)_10%,transparent)]"
             : "cursor-not-allowed opacity-70",
         )}
       >
-        <Check className="h-3.5 w-3.5" strokeWidth={3} />
+        <Check className="h-4 w-4" strokeWidth={3} />
       </button>
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span
