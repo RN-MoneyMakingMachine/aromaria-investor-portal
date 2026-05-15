@@ -29,7 +29,9 @@ export type AuditAction =
   | "DECISION_CREATED"
   | "DECISION_UPDATED"
   | "SHARE_LINK_CREATED"
-  | "SHARE_LINK_OPENED";
+  | "SHARE_LINK_OPENED"
+  | "BANK_STATEMENT_UPLOADED"
+  | "BANK_STATEMENT_REVIEWED";
 
 export type AuditEntry = {
   userId?: string | null;
