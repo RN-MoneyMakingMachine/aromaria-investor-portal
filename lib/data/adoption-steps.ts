@@ -84,6 +84,11 @@ export const ADOPTION_STEPS = {
     "Default Approval Mechanism documented outreach steps operational (email at start, midpoint follow-up, direct contact, Crucial backup contact, all logged) — Office of the CEO — Week 2",
     "Interim Protocol sunsets automatically upon Main Wire release — transition to permanent Authority Matrix governance — Office of the CEO — At Main Wire release",
   ],
+  "PR-16": [
+    "Corporate Governance Framework communicated to the Board (formal review and acknowledgment by all 5 directors) — Jorge Nikaido (CEO) — Month 1",
+    "Corporate Governance Framework communicated company-wide as part of the Single Governance Suite Acknowledgment — HR Lead — Month 3",
+    "Quarterly full Corporate Governance Framework review at Board meeting — Office of the CEO — Quarterly",
+  ],
 } as const satisfies Record<string, AdoptionStepDefinition>;
 
 export function getAdoptionSteps(code: string): AdoptionStepDefinition {
