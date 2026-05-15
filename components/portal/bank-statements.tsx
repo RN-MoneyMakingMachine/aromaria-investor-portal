@@ -87,7 +87,12 @@ export function BankStatements({
 
   const nextDeadlineLabel = new Date(nextDeadlineIso).toLocaleDateString(
     undefined,
-    { weekday: "long", month: "short", day: "numeric" },
+    {
+      weekday: "long",
+      month: "short",
+      day: "numeric",
+      timeZone: "UTC",
+    },
   );
 
   return (
@@ -348,6 +353,7 @@ function StatementRow({
     month: "short",
     day: "numeric",
     year: "numeric",
+    timeZone: "UTC",
   });
   const isReviewed = !!row.reviewedAt;
   return (
