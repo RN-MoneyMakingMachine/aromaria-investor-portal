@@ -40,7 +40,7 @@ export default async function ItemPage({
 
   const chains = await listDeliverableChains(deliverable.id);
   const finalChain = chains.find((c) => c.chainHasFinal) ?? null;
-  const adoptionSteps = await listAdoptionSteps(deliverable.id);
+  const adoptionSteps = await listAdoptionSteps(deliverable.id, deliverable.code);
 
   const nikaidoApproval =
     deliverable.approvals.find((a) => a.side === "NIKAIDO") ?? null;
@@ -174,17 +174,18 @@ export default async function ItemPage({
             }))}
           />
 
-          <AdoptionProgress
-            deliverableId={deliverable.id}
-            canManage={isAdmin(user)}
-            steps={adoptionSteps.map((s) => ({
-              id: s.id,
-              title: s.title,
-              order: s.order,
-              checkedAt: s.checkedAt ? s.checkedAt.toISOString() : null,
-              checkedBy: s.checkedBy,
-            }))}
-          />
+          {adoptionSteps.length > 0 ? (
+            <AdoptionProgress
+              deliverableId={deliverable.id}
+              canManage={isAdmin(user)}
+              steps={adoptionSteps.map((s) => ({
+                index: s.index,
+                title: s.title,
+                completedAt: s.completedAt ? s.completedAt.toISOString() : null,
+                completedBy: s.completedBy,
+              }))}
+            />
+          ) : null}
         </div>
 
         <aside className="flex flex-col gap-6">
@@ -324,6 +325,8 @@ function humanAction(action: string): string {
     AI_DIFF_DONE: "AI change summary ready",
     AI_DIFF_ERROR: "AI change summary failed",
     STATUS_CHANGED: "Status changed",
+    ADOPTION_STEP_CHECKED: "Step completed",
+    ADOPTION_STEP_UNCHECKED: "Step unchecked",
     LOGGED_IN: "Signed in",
     LOGGED_OUT: "Signed out",
     OWNER_CHANGED: "Owner changed",
