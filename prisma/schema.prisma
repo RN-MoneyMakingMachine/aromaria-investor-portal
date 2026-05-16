@@ -107,6 +107,54 @@ enum DecisionTier {
   TIER_2
 }
 
+enum MeetingType {
+  REGULAR
+  QUARTERLY
+  SPECIAL
+  EMERGENCY
+}
+
+enum MeetingStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  MINUTES_APPROVED
+}
+
+enum AgendaItemType {
+  INFORMATION
+  DISCUSSION
+  DECISION
+  RESERVED_MATTER
+}
+
+enum RsvpStatus {
+  PENDING
+  CONFIRMED
+  DECLINED
+  PROXY
+}
+
+enum ResolutionThresholdType {
+  STANDARD
+  TIER_1
+  TIER_2
+  FAMILY_ONLY
+}
+
+enum ResolutionOutcome {
+  PENDING
+  PASSED
+  FAILED
+  WITHDRAWN
+}
+
+enum VoteChoice {
+  FOR
+  AGAINST
+  ABSTAIN
+}
+
 enum BankAccount {
   AROMARIA_LLC
   AROMARIA_UK_LTD
@@ -139,6 +187,8 @@ model User {
   informationRequestsAuthor InformationRequest[]  @relation("InformationRequestAuthor")
   decisionsOwned            Decision[]            @relation("DecisionsOwned")
   retrospectivesRecorded    DecisionRetrospective[] @relation("RetrospectivesRecorded")
+  meetingAttendances        MeetingAttendance[]   @relation("MeetingAttendances")
+  boardVotes                BoardVote[]           @relation("BoardVotes")
 }
 
 model Account {
@@ -299,15 +349,88 @@ model StatusChange {
 }
 
 model BoardMeeting {
+  id           String        @id @default(cuid())
+  title        String
+  meetingDate  DateTime
+  startsAt     DateTime?
+  durationMin  Int?
+  location     String?
+  type         MeetingType   @default(REGULAR)
+  status       MeetingStatus @default(SCHEDULED)
+  agenda       String?       @db.Text
+  minutes      String?       @db.Text
+  decisions    String?       @db.Text
+  attendees    String[]
+  createdAt    DateTime      @default(now())
+  startedAt    DateTime?
+  endedAt      DateTime?
+  files        FileUpload[]
+  agendaItems  AgendaItem[]
+  rsvps        MeetingAttendance[]
+  resolutions  BoardResolution[]
+}
+
+model AgendaItem {
+  id            String          @id @default(cuid())
+  meetingId     String
+  meeting       BoardMeeting    @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  title         String
+  body          String?         @db.Text
+  leadPresenter String?
+  timeMinutes   Int?
+  itemType      AgendaItemType  @default(DISCUSSION)
+  order         Int             @default(0)
+  createdAt     DateTime        @default(now())
+
+  @@index([meetingId, order])
+}
+
+model MeetingAttendance {
   id          String       @id @default(cuid())
-  title       String
-  meetingDate DateTime
-  agenda      String?      @db.Text
-  minutes     String?      @db.Text
-  decisions   String?      @db.Text
-  attendees   String[]
-  createdAt   DateTime     @default(now())
-  files       FileUpload[]
+  meetingId   String
+  meeting     BoardMeeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User         @relation("MeetingAttendances", fields: [userId], references: [id])
+  rsvpStatus  RsvpStatus   @default(PENDING)
+  rsvpNote    String?
+  rsvpAt      DateTime?
+  attendedAt  DateTime?
+  proxyForId  String?
+  updatedAt   DateTime     @updatedAt
+
+  @@unique([meetingId, userId])
+  @@index([userId])
+}
+
+model BoardResolution {
+  id            String                  @id @default(cuid())
+  meetingId     String
+  meeting       BoardMeeting            @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  title         String
+  body          String                  @db.Text
+  thresholdType ResolutionThresholdType @default(STANDARD)
+  outcome       ResolutionOutcome       @default(PENDING)
+  resolvedAt    DateTime?
+  lockedAt      DateTime?
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+  votes         BoardVote[]
+
+  @@index([meetingId])
+}
+
+model BoardVote {
+  id           String          @id @default(cuid())
+  resolutionId String
+  resolution   BoardResolution @relation(fields: [resolutionId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User            @relation("BoardVotes", fields: [userId], references: [id])
+  choice       VoteChoice
+  comment      String?
+  castAt       DateTime        @default(now())
+
+  @@unique([resolutionId, userId])
+  @@index([userId])
 }
 
 model Report {
